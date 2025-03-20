@@ -2,13 +2,22 @@ import numpy as np
 
 
 class Reward:
-    def __init__(self):
-        pass
+    def __init__(self,  target_position):
+        # Initialize with the target position (if provided)
+        if target_position is None:
+            self.target_position = np.array([0, 0, 0], dtype=np.float32)
+        else:
+            self.target_position = target_position
 
     def get_reward(self, obs):
-        position_error = np.sqrt(obs["x"][0] ** 2 + obs["y"][0] ** 2 + obs["z"][0] ** 2)
+        # distance from the target position
+        position_error = np.sqrt(
+            (obs["x"][0] - self.target_position[0]) ** 2 + 
+            (obs["y"][0] - self.target_position[1]) ** 2 + 
+            (obs["z"][0] - self.target_position[2]) ** 2
+        )
 
-        # Velocity penalty
+        # Velocity penalty ---> slow down when approaching the target
         velocity_penalty = np.sqrt(
             obs["vx"][0] ** 2 + obs["vy"][0] ** 2 + obs["vz"][0] ** 2
         )

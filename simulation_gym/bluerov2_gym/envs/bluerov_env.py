@@ -18,7 +18,10 @@ class BlueRov(gym.Env):
             self.model_path = str(asset_path)
 
         self.renderer = BlueRovRenderer()
-        self.reward_fn = Reward()
+        # a target position instead of penalizing only from the origin
+        self.target_position = np.array([1, 0, 0], dtype=np.float32)
+        self.reward_fn = Reward(self.target_position)
+        # self.reward_fn = Reward()
         self.dynamics = Dynamics()
         self.state = {
             "x": 0,
@@ -52,6 +55,7 @@ class BlueRov(gym.Env):
         )
         self.dt = 0.1  # Time step
         self.render_mode = render_mode
+
 
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)

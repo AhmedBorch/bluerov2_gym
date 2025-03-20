@@ -18,7 +18,7 @@ def test_agent():
 
     # Create a dummy vec env for proper normalization
     vec_env = DummyVecEnv([lambda: gym.make("BlueRov-v0")])
-    vec_env = VecNormalize.load("bluerov_vec_normalize.pkl", vec_env)
+    # vec_env = VecNormalize.load("bluerov_vec_normalize.pkl", vec_env) #forgot to save it, skip for now
 
     # Configure normalization for inference
     vec_env.training = False
@@ -37,17 +37,18 @@ def test_agent():
 
         while True:
             # Normalize the observation using the loaded statistics
-            obs_normalized = vec_env.normalize_obs(obs)
+            # obs_normalized = vec_env.normalize_obs(obs)
 
             # Get the action from the trained model
-            action, _ = model.predict(obs_normalized, deterministic=True)
+            # action, _ = model.predict(obs_normalized, deterministic=True)
+            action, _ = model.predict(obs, deterministic=True)
 
             # Take the action in the environment
             obs, reward, terminated, truncated, info = env.step(action)
             episode_reward += reward
 
             # Update the visualization
-            env.step_sim()
+            env.unwrapped.step_sim()
 
             # Add a small delay to make the visualization viewable
             time.sleep(0.1)
@@ -90,7 +91,7 @@ def test_agent_manual_input():
             obs, reward, terminated, truncated, info = env.step(action)
             episode_reward += reward
 
-            env.step_sim()
+            env.unwrapped.step_sim()
 
             time.sleep(0.1)
 
