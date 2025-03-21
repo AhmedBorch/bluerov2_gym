@@ -22,6 +22,7 @@ class BlueRov(gym.Env):
         self.target_position = np.array([1, 0, 0], dtype=np.float32)
         self.reward_fn = Reward(self.target_position)
         # self.reward_fn = Reward()
+        self.target_range = [-3, 3]
         self.dynamics = Dynamics()
         self.state = {
             "x": 0,
@@ -70,6 +71,10 @@ class BlueRov(gym.Env):
             "vz": 0,
             "omega": 0,
         }
+
+        # Randomize the target position within the defined range (for x, y, z)
+        low, high = self.target_range
+        self.target_position = np.random.uniform(low=low, high=high, size=(3,)).astype(np.float32)
 
         self.disturbance_dist = self.dynamics.reset()
         obs = {k: np.array([v], dtype=np.float32) for k, v in self.state.items()}

@@ -14,11 +14,11 @@ def test_agent():
     env = gym.make("BlueRov-v0", render_mode="human")
 
     # Load the trained model and normalization stats
-    model = PPO.load("bluerov_ppo")
+    model = PPO.load("bluerov_ppo_1")
 
     # Create a dummy vec env for proper normalization
     vec_env = DummyVecEnv([lambda: gym.make("BlueRov-v0")])
-    # vec_env = VecNormalize.load("bluerov_vec_normalize.pkl", vec_env) #forgot to save it, skip for now
+    vec_env = VecNormalize.load("bluerov_vec_normalize_1.pkl", vec_env) #forgot to save it, skip for now
 
     # Configure normalization for inference
     vec_env.training = False
@@ -37,11 +37,11 @@ def test_agent():
 
         while True:
             # Normalize the observation using the loaded statistics
-            # obs_normalized = vec_env.normalize_obs(obs)
+            obs_normalized = vec_env.normalize_obs(obs)
 
             # Get the action from the trained model
-            # action, _ = model.predict(obs_normalized, deterministic=True)
-            action, _ = model.predict(obs, deterministic=True)
+            action, _ = model.predict(obs_normalized, deterministic=True)
+            # action, _ = model.predict(obs, deterministic=True)
 
             # Take the action in the environment
             obs, reward, terminated, truncated, info = env.step(action)

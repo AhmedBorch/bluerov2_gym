@@ -17,9 +17,9 @@ env = VecNormalize(env)
 model = PPO("MultiInputPolicy", env, verbose=1)
 
 # Train the agent
-model.learn(total_timesteps=1000)
+model.learn(total_timesteps=100000,progress_bar=True)
 
 # Save the trained model
-model.save("bluerov_ppo")
+model.save("bluerov_ppo_fast")
 
-env.save("bluerov_vec_normalize.pkl")
+env.save("bluerov_vec_normalize_fast.pkl")

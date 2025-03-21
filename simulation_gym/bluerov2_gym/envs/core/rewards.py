@@ -29,7 +29,7 @@ class Reward:
         reward = -(
             1.0 * position_error  # Weight for position error
             + 0.1 * velocity_penalty  # Weight for velocity
-            + 0.5 * orientation_error  # Weight for orientation
+            + 0.25 * orientation_error  # Weight for orientation
         )
 
         return reward
