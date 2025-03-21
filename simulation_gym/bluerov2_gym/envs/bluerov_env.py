@@ -18,6 +18,7 @@ class BlueRov(gym.Env):
             self.model_path = str(asset_path)
 
         self.renderer = BlueRovRenderer()
+        self.train = False
         # a target position instead of penalizing only from the origin
         self.target_position = np.array([1, 0, 0], dtype=np.float32)
         self.reward_fn = Reward(self.target_position)
@@ -73,8 +74,10 @@ class BlueRov(gym.Env):
         }
 
         # Randomize the target position within the defined range (for x, y, z)
-        low, high = self.target_range
-        self.target_position = np.random.uniform(low=low, high=high, size=(3,)).astype(np.float32)
+        if self.train==True:
+            low, high = self.target_range
+            self.target_position = np.random.uniform(low=low, high=high, size=(3,)).astype(np.float32)
+            self.reward_fn = Reward(self.target_position)
 
         self.disturbance_dist = self.dynamics.reset()
         obs = {k: np.array([v], dtype=np.float32) for k, v in self.state.items()}

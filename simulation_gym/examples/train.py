@@ -10,8 +10,10 @@ import bluerov2_gym  # This import will automatically register the environment
 
 # Create and wrap the environment
 env = gym.make("BlueRov-v0")
+env.unwrapped.train = True
 env = DummyVecEnv([lambda: env])
 env = VecNormalize(env)
+
 
 # Initialize the agent
 model = PPO("MultiInputPolicy", env, verbose=1)

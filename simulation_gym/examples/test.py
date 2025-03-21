@@ -14,11 +14,11 @@ def test_agent():
     env = gym.make("BlueRov-v0", render_mode="human")
 
     # Load the trained model and normalization stats
-    model = PPO.load("bluerov_ppo_1")
+    model = PPO.load("bluerov_ppo_fast")
 
     # Create a dummy vec env for proper normalization
     vec_env = DummyVecEnv([lambda: gym.make("BlueRov-v0")])
-    vec_env = VecNormalize.load("bluerov_vec_normalize_1.pkl", vec_env) #forgot to save it, skip for now
+    vec_env = VecNormalize.load("bluerov_vec_normalize_fast.pkl", vec_env) #forgot to save it, skip for now
 
     # Configure normalization for inference
     vec_env.training = False
@@ -30,6 +30,7 @@ def test_agent():
     for episode in range(episodes):
         obs, _ = env.reset()
         env.render()  # Initial render
+        
         episode_reward = 0
         step_count = 0
 
@@ -59,6 +60,7 @@ def test_agent():
             print(
                 f"Step {step_count}: Position (x={obs['x'][0]:.2f}, y={obs['y'][0]:.2f}, z={obs['z'][0]:.2f})"
             )
+            print(f"Target position: {env.unwrapped.target_position}")
             print(f"Current reward: {reward:.2f}")
 
             if terminated or truncated:
