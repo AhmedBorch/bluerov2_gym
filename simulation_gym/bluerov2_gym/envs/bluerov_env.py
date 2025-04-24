@@ -20,7 +20,7 @@ class BlueRov(gym.Env):
         self.renderer = BlueRovRenderer()
         self.train = False
         # a target position instead of penalizing only from the origin
-        self.target_position = np.array([1, 0, 0], dtype=np.float32)
+        self.target_position = np.array([0, 1, 0], dtype=np.float32)
         self.reward_fn = Reward(self.target_position)
         # self.reward_fn = Reward()
         self.target_range = [-3, 3]
@@ -53,6 +53,9 @@ class BlueRov(gym.Env):
                 "vy": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
                 "vz": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
                 "omega": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
+                "target_x": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
+                "target_y": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
+                "target_z": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
             }
         )
         self.dt = 0.1  # Time step
@@ -81,12 +84,18 @@ class BlueRov(gym.Env):
 
         self.disturbance_dist = self.dynamics.reset()
         obs = {k: np.array([v], dtype=np.float32) for k, v in self.state.items()}
+        obs["target_x"] = np.array([self.target_position[0]], dtype=np.float32)
+        obs["target_y"] = np.array([self.target_position[1]], dtype=np.float32)
+        obs["target_z"] = np.array([self.target_position[2]], dtype=np.float32)
 
         return obs, {}
 
     def step(self, action):
         self.dynamics.step(self.state, action)
         obs = {k: np.array([v], dtype=np.float32) for k, v in self.state.items()}
+        obs["target_x"] = np.array([self.target_position[0]], dtype=np.float32)
+        obs["target_y"] = np.array([self.target_position[1]], dtype=np.float32)
+        obs["target_z"] = np.array([self.target_position[2]], dtype=np.float32)
 
         reward = self.reward_fn.get_reward(obs)
 
