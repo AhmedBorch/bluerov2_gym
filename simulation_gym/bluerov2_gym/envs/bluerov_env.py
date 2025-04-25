@@ -20,10 +20,47 @@ class BlueRov(gym.Env):
         self.renderer = BlueRovRenderer()
         self.train = False
         # a target position instead of penalizing only from the origin
-        self.target_position = np.array([0, 1, 0], dtype=np.float32)
+    
+
+        # Define original waypoints
+        key_points = np.array([
+            [1, 0, 0],
+            [1, 1, 0],
+            [0, 1, 0],
+            [-1, 1, 0],
+            [-1, 0, 0],
+            [-1, -1, 0],
+            [0, -1, 0],
+            [1, -1, 0],
+            [1, 0, 0]
+        ], dtype=np.float32)
+
+        # Set how many points to generate between each pair (including endpoints)
+        points_per_segment = 11  # Gives 10 steps (0.0 to 1.0 in 0.1 increments)
+
+        # Generate interpolated path
+        trajectory = []
+
+        for i in range(len(key_points) - 1):
+            start = key_points[i]
+            end = key_points[i + 1]
+            segment = np.linspace(start, end, num=points_per_segment, endpoint=True)
+            
+            # To avoid repeating points, skip the first point unless it's the first segment
+            if i == 0:
+                trajectory.extend(segment)
+            else:
+                trajectory.extend(segment[1:])
+
+        # Convert to numpy array
+        self.target_point_trajectory = np.array(trajectory, dtype=np.float32)
+
+
+        self.target_idx = 0
+        self.target_position = self.target_point_trajectory[0]
         self.reward_fn = Reward(self.target_position)
         # self.reward_fn = Reward()
-        self.target_range = [-3, 3]
+        self.target_range = [-1, 1]
         self.dynamics = Dynamics()
         self.state = {
             "x": 0,
@@ -108,6 +145,13 @@ class BlueRov(gym.Env):
 
         truncated = False
 
+        if reward>-0.5:
+            self.target_idx=self.target_idx+1
+            if self.target_idx==len(self.target_point_trajectory):
+                self.target_idx=len(self.target_point_trajectory)
+            self.target_position=self.target_point_trajectory[self.target_idx]
+            self.reward_fn = Reward(self.target_position)
+
         return obs, reward, terminated, truncated, {}
 
     def render(self):
@@ -115,3 +159,4 @@ class BlueRov(gym.Env):
 
     def step_sim(self):
         self.renderer.step_sim(self.state)
+        self.renderer.plot_target(self.target_position)

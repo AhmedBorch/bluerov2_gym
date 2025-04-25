@@ -2,16 +2,23 @@ import time
 
 import gymnasium as gym
 import numpy as np
-from gymnasium.envs.registration import register
+from gymnasium.envs.registration import register, registry
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
 import bluerov2_gym  # This import will automatically register the environment
 
 
+
+
+
+
+
 def test_agent():
+
+    
     # Create the environment with rendering enabled
-    env = gym.make("BlueRov-v0", render_mode="human")
+    env = gym.make("BlueRov-v0", render_mode="human",max_episode_steps=400)
 
     # Load the trained model and normalization stats
     model = PPO.load("bluerov_ppo_fast")
@@ -74,7 +81,7 @@ def test_agent():
 def test_agent_manual_input():
     env = gym.make("BlueRov-v0", render_mode="human")
 
-    episodes = 100
+    episodes = 200
 
     for episode in range(episodes):
         obs, _ = env.reset()

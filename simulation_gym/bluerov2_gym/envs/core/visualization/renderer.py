@@ -14,6 +14,9 @@ class BlueRovRenderer:
         self.render_mode = render_mode
         self.vis = meshcat.Visualizer()
         self.vis.open()
+        self.trail_markers = []  # For trajectory markers
+        self.step_counter = 0    # To track how many steps have passed
+
 
     def render(self, model_path):
         if self.render_mode != "human":
@@ -42,6 +45,33 @@ class BlueRovRenderer:
         ground_transform = tf.translation_matrix([0, 0, -10])
         self.vis["ground"].set_object(ground, ground_material)
         self.vis["ground"].set_transform(ground_transform)
+        
+
+    def get_robot_position(self):
+        return [self.state["x"], self.state["y"], self.state["z"]]
+
+    def plot_marker(self, position, marker_id=None):
+        marker = g.Sphere(0.02)
+        material = g.MeshLambertMaterial(color=0x00FF00)  # Bright red marker
+        name = f"marker_{marker_id}" if marker_id else f"marker_{len(self.trail_markers)}"
+        
+        self.vis[name].set_object(marker, material)
+
+        transform = tf.translation_matrix(position)
+        self.vis[name].set_transform(transform)
+
+        self.trail_markers.append(name)
+
+
+    def plot_target(self, target_position):
+        target_sphere = g.Sphere(0.15)
+        target_material = g.MeshLambertMaterial(color=0xFF0000)  # Bright red
+
+        self.vis["target"].set_object(target_sphere, target_material)
+
+        transform = tf.translation_matrix(target_position)
+        self.vis["target"].set_transform(transform)
+
 
     def step_sim(self, state):
         self.state = state  # maybe wrong. check later
@@ -61,3 +91,7 @@ class BlueRovRenderer:
         transform_matrix[:3, 3] = translation
 
         self.vis["vessel"].set_transform(transform_matrix)
+        # Plot marker every 10 steps
+        self.step_counter += 1
+        if self.step_counter % 2 == 0:
+            self.plot_marker(position=translation, marker_id=self.step_counter)

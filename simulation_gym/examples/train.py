@@ -12,16 +12,19 @@ import bluerov2_gym  # This import will automatically register the environment
 env = gym.make("BlueRov-v0")
 env.unwrapped.train = True
 env = DummyVecEnv([lambda: env])
-env = VecNormalize(env)
+env = VecNormalize(env, training=True, norm_obs=True, norm_reward=True)
 
+# Load normalization statistics if available
+env = VecNormalize.load("bluerov_vec_normalize_fast.pkl", env)
 
-# Initialize the agent
-model = PPO("MultiInputPolicy", env, verbose=1)
+# Load the pretrained model
+model = PPO.load("bluerov_ppo_fast", env=env)
 
-# Train the agent
-model.learn(total_timesteps=100000,progress_bar=True)
+# Optional: continue training
+model.learn(total_timesteps=200000, progress_bar=True)
 
-# Save the trained model
-model.save("bluerov_ppo_fast")
+# Save the updated model
+model.save("bluerov_ppo_finetuned")
 
-env.save("bluerov_vec_normalize_fast.pkl")
+# Save the updated environment normalization stats
+env.save("bluerov_vec_normalize_finetuned.pkl")
