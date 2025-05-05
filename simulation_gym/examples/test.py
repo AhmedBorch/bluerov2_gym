@@ -9,9 +9,24 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 import bluerov2_gym  # This import will automatically register the environment
 
 
+import webbrowser
+
+import threading
+import requests
+import cv2
 
 
-
+def open_camera_tab():
+    time.sleep(1)  # Increased time to wait for Flask to start
+    try:
+        # Check if the server is running before trying to open it
+        response = requests.get("http://127.0.0.1:5050")
+        if response.status_code == 200:
+            webbrowser.open("http://127.0.0.1:5050")
+        else:
+            print("Camera server not running!")
+    except requests.exceptions.RequestException as e:
+        print(f"Error accessing the camera server: {e}")
 
 
 def test_agent():
@@ -33,6 +48,9 @@ def test_agent():
 
     # Run episodes
     episodes = 5  # Number of episodes to visualize
+
+    threading.Thread(target=open_camera_tab, daemon=True).start()
+
 
     for episode in range(episodes):
         obs, _ = env.reset()
@@ -57,6 +75,9 @@ def test_agent():
 
             # Update the visualization
             env.unwrapped.step_sim()
+
+            
+            #cv2.destroyAllWindows()
 
             # Add a small delay to make the visualization viewable
             time.sleep(0.1)
