@@ -1,4 +1,4 @@
-from flask import Flask, Response, render_template_string
+from flask import Flask, Response, render_template_string, request, jsonify
 import cv2
 import time
 import requests
@@ -17,6 +17,20 @@ def shutdown():
     os.kill(os.getpid(), signal.SIGINT)
 
 camera = CameraSimulator()
+
+latest_state = {
+    "position": [0.0, 0.0, 0.0],
+    "orientation": [0.0, 0.0, 0.0]  # Euler angles
+}
+
+@app.route("/update_state", methods=["POST"])
+def update_state():
+    global latest_state
+    data = request.get_json()
+    latest_state["position"] = data.get("position", latest_state["position"])
+    latest_state["orientation"] = data.get("orientation", latest_state["orientation"])
+    return jsonify({"status": "ok"})
+
 
 # MJPEG stream
 @app.route('/video_feed')
@@ -37,9 +51,11 @@ def shutdown_server():
 
 def generate_camera_frame():
     print("🎥 Starting to generate frames")
-    orientation = [0, 0, 0]  # -roll,-pitch,-yaw
+    
     while True:
-        position = np.array([2, 0, 0])
+        #edited here the latest_state
+        position = np.array(latest_state["position"])
+        orientation = np.array(latest_state["orientation"])  # -roll,-pitch,-yaw
         #orientation[0] += 0.5
 
         frame = camera.render_camera_view(position, orientation)

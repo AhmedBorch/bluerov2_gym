@@ -72,7 +72,7 @@ def test_agent():
     # Run episodes
     episodes = 5  # Number of episodes to visualize
 
-    
+    test_i=0
 
 
     for episode in range(episodes):
@@ -85,6 +85,25 @@ def test_agent():
         print(f"\nStarting Episode {episode + 1}")
 
         while True:
+
+            # pblishing positional data to the html, so we can get it when rnning the camera server
+            position = np.array([env.unwrapped.state["x"],env.unwrapped.state["y"],env.unwrapped.state["z"]])
+            orientation = np.array([0,env.unwrapped.state["theta"],env.unwrapped.state["omega"]])
+
+            #test_i+=1
+
+            #if test_i%10:
+             #   print(position,orientation)
+            try:
+                requests.post("http://127.0.0.1:5050/update_state", json={
+                    "position": position.tolist(),
+                    "orientation": orientation.tolist()
+                })
+
+            except requests.exceptions.RequestException as e:
+                print(f"Warning: Failed to update camera server: {e}")
+
+
             # Normalize the observation using the loaded statistics
             obs_normalized = vec_env.normalize_obs(obs)
 
@@ -100,8 +119,7 @@ def test_agent():
             env.unwrapped.step_sim()
 
             
-            #cv2.destroyAllWindows()
-
+            
             # Add a small delay to make the visualization viewable
             time.sleep(0.1)
 
