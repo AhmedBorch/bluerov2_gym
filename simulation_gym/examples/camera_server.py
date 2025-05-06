@@ -39,7 +39,7 @@ def generate_camera_frame():
     print("🎥 Starting to generate frames")
     orientation = [0, 0, 0]  # -roll,-pitch,-yaw
     while True:
-        position = np.array([0, 0, 0])
+        position = np.array([2, 0, 0])
         #orientation[0] += 0.5
 
         frame = camera.render_camera_view(position, orientation)

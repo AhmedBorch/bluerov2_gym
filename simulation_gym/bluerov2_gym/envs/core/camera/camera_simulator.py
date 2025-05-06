@@ -7,13 +7,15 @@ class CameraSimulator:
     def __init__(self):
         p.connect(p.GUI) # Direct mode (no rendering)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
+        
 
         # Add this line before adding objects to the simulation
         p.resetSimulation()
+        p.setGravity(0, 0, 0)  # Disable gravity
 
         # Load the ground plane
         self.plane_id = p.loadURDF("plane.urdf")
-
+        
         # Add colored balls
         
 # Create colored spheres (balls)
@@ -24,8 +26,10 @@ class CameraSimulator:
         self.ball_ids.append(self.create_colored_ball([-3, 0, 0], [1, 0, 0])) # Red
         self.ball_ids.append(self.create_colored_ball([0, -3, 0], [0, 1, 0])) # Green
         for ball_id in self.ball_ids:
+            p.resetBaseVelocity(ball_id, [0, 0, 0])  # Zero initial velocity
+            p.resetBasePositionAndOrientation(ball_id, p.getBasePositionAndOrientation(ball_id)[0], [0, 0, 0, 1])  # Zero orientation
+            p.resetBaseVelocity(ball_id, [0, 0, 0])  # Zero velocity
             print("Ball added at:", p.getBasePositionAndOrientation(ball_id))
-
 
         # Camera settings
         self.width = 640
@@ -45,7 +49,7 @@ class CameraSimulator:
         sphere_radius = 1
         collision = p.createCollisionShape(p.GEOM_SPHERE, radius=sphere_radius)
         visual = p.createVisualShape(p.GEOM_SPHERE, radius=sphere_radius, rgbaColor=color + [1])
-        return p.createMultiBody(1, collision, visual, basePosition=position)
+        return p.createMultiBody(0, collision, visual, basePosition=position)
 
  
     def render_camera_view(self, position, orientation):
