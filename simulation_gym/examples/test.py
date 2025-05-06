@@ -17,21 +17,44 @@ import cv2
 
 import subprocess
 
+import os
+
 def start_camera_server():
-    subprocess.Popen(["python", "examples/camera_server.py"])
+    script_path = os.path.join(os.path.dirname(__file__), "camera_server.py")
+    print(f"🚀 Starting camera server from: {script_path}")
+    
+    process = subprocess.Popen(
+        ["python", script_path],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True  # Decode bytes to strings
+    )
+
+    def log_output(stream, name):
+        for line in iter(stream.readline, ''):
+            print(f"[{name}] {line.strip()}")
+        stream.close()
+
+    # Start threads to log stdout and stderr
+    threading.Thread(target=log_output, args=(process.stdout, "STDOUT"), daemon=True).start()
+    threading.Thread(target=log_output, args=(process.stderr, "STDERR"), daemon=True).start()
+    
+    return process
 
 def open_camera_tab():
     webbrowser.open("http://127.0.0.1:5050")
     
+def stop_camera_server(process):
+    """Stop the camera server by terminating the subprocess."""
+    print("🛑 Stopping camera server...")
+    process.terminate()  # Gracefully terminate the camera server
+    process.wait()  # Wait for the process to fully terminate
 
 def test_agent():
 
-     # Start the camera server in the background
-    threading.Thread(target=start_camera_server, daemon=True).start()
+    # Start the camera server
+    camera_server_process = start_camera_server()
 
-    # Wait a bit to ensure the server is running before trying to open the browser tab
-    threading.Thread(target=open_camera_tab, daemon=True).start()
-    
     # Create the environment with rendering enabled
     env = gym.make("BlueRov-v0", render_mode="human",max_episode_steps=400)
 
@@ -50,7 +73,6 @@ def test_agent():
     episodes = 5  # Number of episodes to visualize
 
     
-
 
 
     for episode in range(episodes):
@@ -96,6 +118,9 @@ def test_agent():
                 print(f"Episode {episode + 1} finished after {step_count} steps")
                 print(f"Total reward: {episode_reward:.2f}")
                 break
+    
+    # Shut down the camera server before closing the environment
+    stop_camera_server(camera_server_process)
 
     env.close()
 

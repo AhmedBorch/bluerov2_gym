@@ -5,14 +5,23 @@ import requests
 import webbrowser
 import threading
 import numpy as np
-from camera_simulator import CameraSimulator
+from bluerov2_gym.envs.core.camera.camera_simulator import CameraSimulator
+import os
+import signal
 
 app = Flask(__name__)
+
+# Shutdown function
+def shutdown():
+    print("🛑 Shutting down the server...")
+    os.kill(os.getpid(), signal.SIGINT)
+
 camera = CameraSimulator()
 
 # MJPEG stream
 @app.route('/video_feed')
 def video_feed():
+    print("🔁 /video_feed requested")
     return Response(generate_camera_frame(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # Serve the HTML
@@ -20,17 +29,35 @@ def video_feed():
 def index():
     return render_template_string(HTML_TEMPLATE)
 
+@app.route('/shutdown', methods=['POST'])
+def shutdown_server():
+    """Handle server shutdown manually"""
+    shutdown()
+    return 'Server shutting down...'
+
 def generate_camera_frame():
-    orientation = [0, -np.pi/4, 0]  # yaw, pitch, roll
+    print("🎥 Starting to generate frames")
+    orientation = [0, 0, 0]  # yaw, pitch, roll
     while True:
-        position = np.array([0, 0, 5])
-        orientation[0] += 0.5
+        position = np.array([0, 0, 0])
+        #orientation[0] += 0.5
 
         frame = camera.render_camera_view(position, orientation)
-        ret, jpeg = cv2.imencode('.jpg', frame)
+        if frame is None or frame.size == 0:
+            print("❌ Invalid frame received!")
+
+        if frame.shape != (480, 640, 3):  # Or whatever shape you're expecting
+            print(f"⚠️ Unexpected frame shape: {frame.shape}")
+        ret, jpeg = cv2.imencode('.jpeg', frame)
+        if not ret:
+            print("⚠️ Failed to encode frame to JPEG")
+            continue
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n')
         time.sleep(0.1)
+
+    print("Ending camera server...")
+    shutdown()  # Call the shutdown function
 
 def open_camera_tab():
     max_retries = 20
@@ -38,11 +65,14 @@ def open_camera_tab():
         try:
             response = requests.get("http://127.0.0.1:5050")
             if response.status_code == 200:
+                print("Server is ready, opening browser...")
                 webbrowser.open("http://127.0.0.1:5050")
                 return
         except requests.exceptions.ConnectionError:
-            pass
-        time.sleep(0.5)
+            print(f"Retrying... {i + 1}/{max_retries}")
+        time.sleep(0.5)  # Wait a bit before retrying
+    print("⚠️ Failed to open browser tab: server didn't respond.")
+
 
 # HTML content directly embedded
 HTML_TEMPLATE = """
