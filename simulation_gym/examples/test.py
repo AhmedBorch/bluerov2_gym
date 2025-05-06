@@ -15,32 +15,32 @@ import threading
 import requests
 import cv2
 
+import subprocess
+
+def start_camera_server():
+    subprocess.Popen(["python", "examples/camera_server.py"])
 
 def open_camera_tab():
-    time.sleep(1)  # Increased time to wait for Flask to start
-    try:
-        # Check if the server is running before trying to open it
-        response = requests.get("http://127.0.0.1:5050")
-        if response.status_code == 200:
-            webbrowser.open("http://127.0.0.1:5050")
-        else:
-            print("Camera server not running!")
-    except requests.exceptions.RequestException as e:
-        print(f"Error accessing the camera server: {e}")
-
+    webbrowser.open("http://127.0.0.1:5050")
+    
 
 def test_agent():
 
+     # Start the camera server in the background
+    threading.Thread(target=start_camera_server, daemon=True).start()
+
+    # Wait a bit to ensure the server is running before trying to open the browser tab
+    threading.Thread(target=open_camera_tab, daemon=True).start()
     
     # Create the environment with rendering enabled
     env = gym.make("BlueRov-v0", render_mode="human",max_episode_steps=400)
 
     # Load the trained model and normalization stats
-    model = PPO.load("bluerov_ppo_fast")
+    model = PPO.load("examples/200000_trained_network/bluerov_ppo_fast")
 
     # Create a dummy vec env for proper normalization
     vec_env = DummyVecEnv([lambda: gym.make("BlueRov-v0")])
-    vec_env = VecNormalize.load("bluerov_vec_normalize_fast.pkl", vec_env) #forgot to save it, skip for now
+    vec_env = VecNormalize.load("examples/200000_trained_network/bluerov_vec_normalize_fast.pkl", vec_env) #forgot to save it, skip for now
 
     # Configure normalization for inference
     vec_env.training = False
@@ -49,7 +49,8 @@ def test_agent():
     # Run episodes
     episodes = 5  # Number of episodes to visualize
 
-    threading.Thread(target=open_camera_tab, daemon=True).start()
+    
+
 
 
     for episode in range(episodes):
