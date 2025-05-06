@@ -42,7 +42,7 @@ class CameraSimulator:
 
 
     def create_colored_ball(self, position, color):
-        sphere_radius = 0.5
+        sphere_radius = 1
         collision = p.createCollisionShape(p.GEOM_SPHERE, radius=sphere_radius)
         visual = p.createVisualShape(p.GEOM_SPHERE, radius=sphere_radius, rgbaColor=color + [1])
         return p.createMultiBody(1, collision, visual, basePosition=position)
@@ -57,8 +57,8 @@ class CameraSimulator:
 
         # Compute forward-facing camera direction
         rot_matrix = np.array(p.getMatrixFromQuaternion(q)).reshape(3, 3)
-        camera_vector = rot_matrix @ np.array([1, 0, 0])  # forward
-        up_vector = rot_matrix @ np.array([0, 0, 1])      # up
+        camera_vector = rot_matrix @ np.array([-1, 0, 0])  # forward #np.array([-1, 0, 0])
+        up_vector = rot_matrix @ np.array([0, 0, 1])      # up #np.array([0, 0, 1]) 
 
         # Set camera target to the robot's position
         camera_target = position + camera_vector
