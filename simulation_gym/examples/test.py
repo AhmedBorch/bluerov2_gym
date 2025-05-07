@@ -70,7 +70,7 @@ def test_agent():
     vec_env.norm_reward = False
 
     # Run episodes
-    episodes = 5  # Number of episodes to visualize
+    episodes = 1  # Number of episodes to visualize
 
     test_i=0
 
@@ -89,7 +89,7 @@ def test_agent():
             # pblishing positional data to the html, so we can get it when rnning the camera server
             position = np.array([env.unwrapped.state["x"],env.unwrapped.state["y"],env.unwrapped.state["z"]])
             orientation = np.array([0,env.unwrapped.state["theta"],env.unwrapped.state["omega"]])
-
+            target_buoy =np.array([env.unwrapped.target_position])
             #test_i+=1
 
             #if test_i%10:
@@ -97,7 +97,8 @@ def test_agent():
             try:
                 requests.post("http://127.0.0.1:5050/update_state", json={
                     "position": position.tolist(),
-                    "orientation": orientation.tolist()
+                    "orientation": orientation.tolist(),
+                    "target_buoy": target_buoy.tolist()
                 })
 
             except requests.exceptions.RequestException as e:

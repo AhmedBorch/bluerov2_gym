@@ -20,7 +20,8 @@ camera = CameraSimulator()
 
 latest_state = {
     "position": [0.0, 0.0, 0.0],
-    "orientation": [0.0, 0.0, 0.0]  # Euler angles
+    "orientation": [0.0, 0.0, 0.0],  # Euler angles
+    "target_buoy": [1.0, 0.0, 0.0]
 }
 
 @app.route("/update_state", methods=["POST"])
@@ -29,6 +30,7 @@ def update_state():
     data = request.get_json()
     latest_state["position"] = data.get("position", latest_state["position"])
     latest_state["orientation"] = data.get("orientation", latest_state["orientation"])
+    latest_state["target_buoy"] = data.get("target_buoy", latest_state["target_buoy"])
     return jsonify({"status": "ok"})
 
 
@@ -56,9 +58,10 @@ def generate_camera_frame():
         #edited here the latest_state
         position = np.array(latest_state["position"])
         orientation = np.array(latest_state["orientation"])  # -roll,-pitch,-yaw
+        target_buoy = latest_state["target_buoy"]
         #orientation[0] += 0.5
 
-        frame = camera.render_camera_view(position, orientation)
+        frame = camera.render_camera_view(position, orientation,new_buoy_positions=target_buoy)#change later to multiple target buoys
         if frame is None or frame.size == 0:
             print("❌ Invalid frame received!")
 

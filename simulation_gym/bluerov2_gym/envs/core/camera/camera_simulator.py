@@ -52,11 +52,23 @@ class CameraSimulator:
         return p.createMultiBody(0, collision, visual, basePosition=position)
 
  
-    def render_camera_view(self, position, orientation):
+    def render_camera_view(self, position, orientation,new_buoy_positions=None):
         """
         Simulates a camera located at `position` with `orientation` (yaw, pitch, roll in radians).
         """
+
+        print(f"[DEBUG] Camera position: {position}, orientation: {orientation}")
+    
         # Convert Euler to quaternion
+
+        # Updating the position
+        #new_buoy_positions #e.g of that type [new_x, new_y, new_z]
+        if new_buoy_positions is not None:
+            new_buoy_positions = np.array(new_buoy_positions).flatten()
+            assert len(new_buoy_positions) == 3, "Buoy pos must be of length 3"
+            print(f"[DEBUG] Updating buoy position: {new_buoy_positions} {type(new_buoy_positions)}", flush=True)
+            p.resetBasePositionAndOrientation(self.ball_ids[0], new_buoy_positions.tolist(), [0, 0, 0, 1])
+
         q = p.getQuaternionFromEuler(orientation)
 
         # Compute forward-facing camera direction
