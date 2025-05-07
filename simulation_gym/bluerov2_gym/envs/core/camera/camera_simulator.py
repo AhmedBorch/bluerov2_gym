@@ -5,7 +5,7 @@ import time
 
 class CameraSimulator:
     def __init__(self):
-        p.connect(p.GUI) # Direct mode (no rendering)
+        p.connect(p.DIRECT) # Direct mode (no rendering)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         
 
