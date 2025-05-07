@@ -15,6 +15,7 @@ class BlueRovRenderer:
         self.vis = meshcat.Visualizer()
         self.vis.open()
         self.trail_markers = []  # For trajectory markers
+        self.trail_positions = []
         self.step_counter = 0    # To track how many steps have passed
 
 
@@ -61,6 +62,7 @@ class BlueRovRenderer:
         self.vis[name].set_transform(transform)
 
         self.trail_markers.append(name)
+        self.trail_positions.append(position)
 
 
     def plot_target(self, target_position):

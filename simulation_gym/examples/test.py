@@ -90,15 +90,14 @@ def test_agent():
             position = np.array([env.unwrapped.state["x"],env.unwrapped.state["y"],env.unwrapped.state["z"]])
             orientation = np.array([0,env.unwrapped.state["theta"],env.unwrapped.state["omega"]])
             target_buoy =np.array([env.unwrapped.target_position])
-            #test_i+=1
-
-            #if test_i%10:
-             #   print(position,orientation)
+            trajectory_markers = np.array([env.unwrapped.renderer.trail_positions])# we want the position of the traectory points
+            
             try:
                 requests.post("http://127.0.0.1:5050/update_state", json={
                     "position": position.tolist(),
                     "orientation": orientation.tolist(),
-                    "target_buoy": target_buoy.tolist()
+                    "target_buoy": target_buoy.tolist(),
+                    "trajectory_markers": trajectory_markers.tolist()
                 })
 
             except requests.exceptions.RequestException as e:

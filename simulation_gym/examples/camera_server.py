@@ -21,7 +21,8 @@ camera = CameraSimulator()
 latest_state = {
     "position": [0.0, 0.0, 0.0],
     "orientation": [0.0, 0.0, 0.0],  # Euler angles
-    "target_buoy": [1.0, 0.0, 0.0]
+    "target_buoy": [1.0, 0.0, 0.0],
+    "trajectory_markers": [[0.0, 0.0, 0.0]]
 }
 
 @app.route("/update_state", methods=["POST"])
@@ -31,6 +32,7 @@ def update_state():
     latest_state["position"] = data.get("position", latest_state["position"])
     latest_state["orientation"] = data.get("orientation", latest_state["orientation"])
     latest_state["target_buoy"] = data.get("target_buoy", latest_state["target_buoy"])
+    latest_state["trajectory_markers"] = data.get("trajectory_markers", latest_state["trajectory_markers"] )
     return jsonify({"status": "ok"})
 
 
@@ -59,20 +61,24 @@ def generate_camera_frame():
         position = np.array(latest_state["position"])
         orientation = np.array(latest_state["orientation"])  # -roll,-pitch,-yaw
         target_buoy = latest_state["target_buoy"]
+        trajectory_markers = np.array(latest_state["trajectory_markers"])
         #orientation[0] += 0.5
 
-        frame = camera.render_camera_view(position, orientation,new_buoy_positions=target_buoy)#change later to multiple target buoys
+        frame = camera.render_camera_view(position, orientation,new_buoy_positions=target_buoy,trajectory_markers=trajectory_markers)#change later to multiple target buoys
         if frame is None or frame.size == 0:
             print("❌ Invalid frame received!")
 
         if frame.shape != (480, 640, 3):  # Or whatever shape you're expecting
             print(f"⚠️ Unexpected frame shape: {frame.shape}")
-        ret, jpeg = cv2.imencode('.jpeg', frame)
+        # If the image is in RGB format and you want to ensure it's in BGR before encoding
+        frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        ret, png = cv2.imencode('.png', frame_bgr)
+
         if not ret:
             print("⚠️ Failed to encode frame to JPEG")
             continue
         yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n')
+               b'Content-Type: image/png\r\n\r\n' + png.tobytes() + b'\r\n')
         time.sleep(0.1)
 
     print("Ending camera server...")
