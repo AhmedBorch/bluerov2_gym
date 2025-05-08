@@ -147,8 +147,8 @@ class BlueRov(gym.Env):
 
         if reward>-0.5:
             self.target_idx=self.target_idx+1
-            if self.target_idx==len(self.target_point_trajectory):
-                self.target_idx=len(self.target_point_trajectory)
+            if self.target_idx>=len(self.target_point_trajectory):
+                self.target_idx=len(self.target_point_trajectory)-1
             self.target_position=self.target_point_trajectory[self.target_idx]
             self.reward_fn = Reward(self.target_position)
 
