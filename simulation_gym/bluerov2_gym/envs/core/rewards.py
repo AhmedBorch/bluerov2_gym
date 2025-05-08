@@ -23,13 +23,13 @@ class Reward:
         )
 
         # Orientation error
-        orientation_error = abs(obs["theta"][0])
+        orientation_error = abs(np.arctan2((self.target_position[1]-obs["y"][0])/(self.target_position[0]-obs["x"][0]))-obs["theta"][0])
 
         # Combined reward
         reward = -(
             1.0 * position_error  # Weight for position error
             + 0.1 * velocity_penalty  # Weight for velocity
-            + 0.25 * orientation_error  # Weight for orientation
+            + 1 * orientation_error  # Weight for orientation
         )
 
         return reward

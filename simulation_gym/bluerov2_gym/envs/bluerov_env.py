@@ -142,15 +142,23 @@ class BlueRov(gym.Env):
             terminated = True
         if abs(self.state["x"]) > 15.0 or abs(self.state["y"]) > 15.0:
             terminated = True
+        if self.train==True:
+            # Terminate if too close to target
+            dx = self.state["x"] - self.target_position[0]
+            dy = self.state["y"] - self.target_position[1]
+            dz = self.state["z"] - self.target_position[2]
+            distance_to_target = np.sqrt(dx**2 + dy**2 + dz**2)
+            if distance_to_target < 0.2:  # Adjust threshold as needed
+                terminated = True
 
         truncated = False
-
-        if reward>-0.5:
-            self.target_idx=self.target_idx+1
-            if self.target_idx>=len(self.target_point_trajectory):
-                self.target_idx=len(self.target_point_trajectory)-1
-            self.target_position=self.target_point_trajectory[self.target_idx]
-            self.reward_fn = Reward(self.target_position)
+        if self.train==False:
+            if reward>-0.5:
+                self.target_idx=self.target_idx+1
+                if self.target_idx>=len(self.target_point_trajectory):
+                    self.target_idx=len(self.target_point_trajectory)-1
+                self.target_position=self.target_point_trajectory[self.target_idx]
+                self.reward_fn = Reward(self.target_position)
 
         return obs, reward, terminated, truncated, {}
 
