@@ -6,13 +6,20 @@ import numpy as np
 from gymnasium.envs.registration import register
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
+import wandb
+from wandb.integration.sb3 import WandbCallback
 
 from stable_baselines3.common.callbacks import BaseCallback # for callbacks
 import bluerov2_gym  # This import will automatically register the environment
 
+<<<<<<< Updated upstream
 import pickle # saving the stats
 from EpisodeStatsCallback import EpisodeStatsCallback
 
+=======
+# keep track of the training
+wandb.init(project="bluerov-ppo", config={"learning_rate": 3e-4, "gamma": 0.99, "epochs": 10})
+>>>>>>> Stashed changes
 
 # Create and wrap the environment
 env = gym.make("BlueRov-v0")
@@ -21,10 +28,10 @@ env = DummyVecEnv([lambda: env])
 env = VecNormalize(env, training=True, norm_obs=True, norm_reward=True)
 
 # Load normalization statistics if available
-env = VecNormalize.load("bluerov_vec_normalize_fast.pkl", env)
+env = VecNormalize.load("examples/bluerov_vec_normalize_finetuned_orientation.pkl", env)
 
 # Load the pretrained model
-model = PPO.load("bluerov_ppo_fast", env=env)
+model = PPO.load("examples/bluerov_ppo_finetuned_orientation", env=env)
 
 #training + callback initialisation
 callback = EpisodeStatsCallback()
@@ -35,8 +42,9 @@ stats = callback.get_stats()
 with open("training_stats.pkl", "wb") as f:
     pickle.dump(stats, f)
 
+
 # Save the updated model
-model.save("bluerov_ppo_finetuned")
+model.save("examples/bluerov_ppo_finetuned_orientation1")
 
 # Save the updated environment normalization stats
-env.save("bluerov_vec_normalize_finetuned.pkl")
+env.save("examples/bluerov_vec_normalize_finetuned_orientation1.pkl")

@@ -17,19 +17,36 @@ class Reward:
             (obs["z"][0] - self.target_position[2]) ** 2
         )
 
+        # Success bonus when close to target
+        if position_error < 0.4:
+            buffer_zone_penalty = -2.0
+        else:
+            buffer_zone_penalty = 0.0
+        
+        if position_error < 0.5:
+            orientation_weight = 0.5
+        else:
+            orientation_weight = 2.0
+
         # Velocity penalty ---> slow down when approaching the target
         velocity_penalty = np.sqrt(
             obs["vx"][0] ** 2 + obs["vy"][0] ** 2 + obs["vz"][0] ** 2
         )
 
         # Orientation error
-        orientation_error = abs(np.arctan2((self.target_position[1]-obs["y"][0]),(self.target_position[0]-obs["x"][0]))-obs["theta"][0])
+
+        orientation_error = abs(
+            np.arctan2(self.target_position[1] - obs["y"][0],self.target_position[0] - obs["x"][0] + 1e-6)  
+        - obs["theta"][0])
+
+        
 
         # Combined reward
-        reward = -(
-            1.0 * position_error  # Weight for position error
-            + 0.1 * velocity_penalty  # Weight for velocity
-            + 1 * orientation_error  # Weight for orientation
+        reward = (
+            -1.0 * position_error  # Weight for position error### around 3
+            - 0.1 * velocity_penalty  # Weight for velocity
+            - orientation_weight * orientation_error  # Weight for orientation  ### pi= 3.14
+            + buffer_zone_penalty
         )
 
         return reward

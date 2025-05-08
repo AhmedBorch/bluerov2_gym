@@ -24,15 +24,15 @@ class BlueRov(gym.Env):
 
         # Define original waypoints
         key_points = np.array([
-            [1, 0, 0],
+            [1, 1, 1],
             [1, 1, 0],
-            [0, 1, 0],
-            [-1, 1, 0],
-            [-1, 0, 0],
-            [-1, -1, 0],
-            [0, -1, 0],
+            [0, 1, -1],
+            [-1, 1, -0.6],
+            [-1, 0, 0.8],
+            [-1, -1, -0.7],
+            [0, -1, 1],
             [1, -1, 0],
-            [1, 0, 0]
+            [1, 0, -1]
         ], dtype=np.float32)
 
         # Set how many points to generate between each pair (including endpoints)
@@ -138,9 +138,9 @@ class BlueRov(gym.Env):
 
         terminated = False
         # Example conditions (please change these to your own conditions)
-        if abs(self.state["z"]) > 10.0:
+        if abs(self.state["z"]) > 3.0:
             terminated = True
-        if abs(self.state["x"]) > 15.0 or abs(self.state["y"]) > 15.0:
+        if abs(self.state["x"]) > 3.0 or abs(self.state["y"]) > 3.0:
             terminated = True
         if self.train==True:
             # Terminate if too close to target
@@ -152,6 +152,7 @@ class BlueRov(gym.Env):
                 terminated = True
 
         truncated = False
+
         if self.train==False:
             if reward>-0.5:
                 self.target_idx=self.target_idx+1
@@ -159,6 +160,7 @@ class BlueRov(gym.Env):
                     self.target_idx=len(self.target_point_trajectory)-1
                 self.target_position=self.target_point_trajectory[self.target_idx]
                 self.reward_fn = Reward(self.target_position)
+
 
         return obs, reward, terminated, truncated, {}
 
