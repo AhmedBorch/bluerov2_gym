@@ -24,16 +24,28 @@ class BlueRov(gym.Env):
 
         # Define original waypoints
         key_points = np.array([
-            [1, 0, 0],
+            [1, 1, 1],
             [1, 1, 0],
-            [0, 1, 0],
-            [-1, 1, 0],
-            [-1, 0, 0],
-            [-1, -1, 0],
-            [0, -1, 0],
+            [0, 1, -1],
+            [-1, 1, -0.6],
+            [-1, 0, 0.8],
+            [-1, -1, -0.7],
+            [0, -1, 1],
             [1, -1, 0],
-            [1, 0, 0]
+            [1, 0, -1]
         ], dtype=np.float32)
+
+        # key_points = np.array([
+        #     [1, 0, 0],
+        #     [1, 1, 0],
+        #     [0, 1, 0],
+        #     [-1, 1, 0],
+        #     [-1, 0, 0],
+        #     [-1, -1, 0],
+        #     [0, -1, 0],
+        #     [1, -1, 0],
+        #     [1, 0, 0]
+        # ], dtype=np.float32)
 
         # Set how many points to generate between each pair (including endpoints)
         points_per_segment = 11  # Gives 10 steps (0.0 to 1.0 in 0.1 increments)
@@ -142,7 +154,19 @@ class BlueRov(gym.Env):
             terminated = True
         if abs(self.state["x"]) > 15.0 or abs(self.state["y"]) > 15.0:
             terminated = True
+
+        
+        
+        
+
         if self.train==True:
+
+                # Example conditions (please change these to your own conditions)
+            if abs(self.state["z"]) > 3.0:
+                terminated = True
+            if abs(self.state["x"]) > 3.0 or abs(self.state["y"]) > 3.0:
+                terminated = True
+
             # Terminate if too close to target
             dx = self.state["x"] - self.target_position[0]
             dy = self.state["y"] - self.target_position[1]

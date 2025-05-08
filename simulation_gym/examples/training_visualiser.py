@@ -20,52 +20,46 @@ total_rewards = [sum(rewards) for rewards in episode_rewards]
 
 
 
-plt.figure(figsize=(15, 5))
+# Plotting
+plt.figure(figsize=(18, 5))
 
 # Plot total reward per episode
 plt.subplot(1, 3, 1)
 plt.plot(total_rewards)
-plt.xlabel("Episode")
-plt.ylabel("Total Reward")
-plt.title("Total Reward per Episode")
+plt.xlabel("Episode", fontsize=17)  # Increased fontsize
+plt.ylabel("Total Reward", fontsize=17)  # Increased fontsize
 plt.grid(True)
-plt.legend()
+plt.tick_params(axis='both', labelsize=14)  # Increased tick number size
 
 # Plot episode lengths
 plt.subplot(1, 3, 2)
-plt.plot(episode_lengths)
-plt.xlabel("Episode")
-plt.ylabel("Episode Length (steps)")
-plt.title("Episode Length per Episode")
+plt.plot(episode_lengths, color="C3")
+plt.xlabel("Episode", fontsize=17)  # Increased fontsize
+plt.ylabel("Episode Length (steps)", fontsize=17)  # Increased fontsize
 plt.grid(True)
+plt.tick_params(axis='both', labelsize=14)  # Increased tick number size
 
+# Plot reward curves per episode with color scale
 plt.subplot(1, 3, 3)
-
-# Plot total reward per episode
-# The color 
-
-# Choose a colormap (e.g., 'viridis', 'plasma', 'cool', 'inferno')
 cmap = plt.get_cmap('viridis')
-N=len(episode_rewards)
-# Create N colors spaced evenly across the colormap
+N = len(episode_rewards)
 colors = [cmap(i / (N - 1)) for i in range(N)]
-
 
 for i, (reward, color) in enumerate(zip(episode_rewards, colors)):
     plt.plot(reward, color=color)
 
-plt.xlabel("Step within Episode")
-plt.ylabel("Reward at Step")
-plt.ylim([-0.1,0.0])
-plt.title("Reward per Step (Colored by Episode)")
+plt.xlabel("Step within Episode", fontsize=17)  # Increased fontsize
+plt.ylabel("Reward at Step", fontsize=17)  # Increased fontsize
 plt.grid(True)
+plt.tick_params(axis='both', labelsize=14)  # Increased tick number size
 
 # Add a colorbar for episode number
 norm = Normalize(vmin=1, vmax=N)
 sm = ScalarMappable(cmap=cmap, norm=norm)
 sm.set_array([])  # Dummy array for the colorbar
 cbar = plt.colorbar(sm, ax=plt.gca(), pad=0.02)
-cbar.set_label("Episode Number")
+cbar.set_label("Episode Number", fontsize=17)  # Increased fontsize
 
+# Remove title
 plt.tight_layout()
 plt.show()
