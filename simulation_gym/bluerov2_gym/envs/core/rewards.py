@@ -23,7 +23,7 @@ class Reward:
         )
 
         # Orientation error
-        orientation_error = abs(obs["theta"][0])
+        orientation_error = abs(np.arctan2obs["theta"][0])
 
         # Combined reward
         reward = -(
