@@ -23,29 +23,29 @@ class BlueRov(gym.Env):
     
 
         # Define original waypoints
-        key_points = np.array([
-            [1, 1, 1],
-            [1, 1, 0],
-            [0, 1, -1],
-            [-1, 1, -0.6],
-            [-1, 0, 0.8],
-            [-1, -1, -0.7],
-            [0, -1, 1],
-            [1, -1, 0],
-            [1, 0, -1]
-        ], dtype=np.float32)
-
         # key_points = np.array([
-        #     [1, 0, 0],
+        #     [1, 1, 1],
         #     [1, 1, 0],
-        #     [0, 1, 0],
-        #     [-1, 1, 0],
-        #     [-1, 0, 0],
-        #     [-1, -1, 0],
-        #     [0, -1, 0],
+        #     [0, 1, -1],
+        #     [-1, 1, -0.6],
+        #     [-1, 0, 0.8],
+        #     [-1, -1, -0.7],
+        #     [0, -1, 1],
         #     [1, -1, 0],
-        #     [1, 0, 0]
+        #     [1, 0, -1]
         # ], dtype=np.float32)
+
+        key_points =5*np.array([
+            [1, 0, 0],
+            [1, 1, 0],
+            [0, 1, 0],
+            [-1, 1, 0],
+            [-1, 0, 0],
+            [-1, -1, 0],
+            [0, -1, 0],
+            [1, -1, 0],
+            [1, 0, 0]
+        ], dtype=np.float32)
 
         # Set how many points to generate between each pair (including endpoints)
         points_per_segment = 11  # Gives 10 steps (0.0 to 1.0 in 0.1 increments)
@@ -110,6 +110,8 @@ class BlueRov(gym.Env):
         self.dt = 0.1  # Time step
         self.render_mode = render_mode
 
+    
+    
 
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
@@ -126,9 +128,19 @@ class BlueRov(gym.Env):
         }
 
         # Randomize the target position within the defined range (for x, y, z)
-        if self.train==True:
-            low, high = self.target_range
-            self.target_position = np.random.uniform(low=low, high=high, size=(3,)).astype(np.float32)
+        if self.train:
+            def sample_point_in_spherical_shell(inner_radius=0.7, outer_radius=1.2):
+                r = ((np.random.uniform(inner_radius**3, outer_radius**3))**(1/3))
+                theta = np.random.uniform(0, 2 * np.pi)
+                phi = np.arccos(np.random.uniform(-1, 1))
+
+                x = r * np.sin(phi) * np.cos(theta)
+                y = r * np.sin(phi) * np.sin(theta)
+                z = r * np.cos(phi)
+
+                return np.array([x, y, z], dtype=np.float32)
+    
+            self.target_position = sample_point_in_spherical_shell(inner_radius=1.0, outer_radius=2.0)
             self.reward_fn = Reward(self.target_position)
 
         self.disturbance_dist = self.dynamics.reset()
@@ -159,25 +171,25 @@ class BlueRov(gym.Env):
         
         
 
-        if self.train==True:
+        # if self.train==True:
 
-                # Example conditions (please change these to your own conditions)
-            if abs(self.state["z"]) > 3.0:
-                terminated = True
-            if abs(self.state["x"]) > 3.0 or abs(self.state["y"]) > 3.0:
-                terminated = True
+        #         # Example conditions (please change these to your own conditions)
+        #     if abs(self.state["z"]) > 3.0:
+        #         terminated = True
+        #     if abs(self.state["x"]) > 3.0 or abs(self.state["y"]) > 3.0:
+        #         terminated = True
 
-            # Terminate if too close to target
-            dx = self.state["x"] - self.target_position[0]
-            dy = self.state["y"] - self.target_position[1]
-            dz = self.state["z"] - self.target_position[2]
-            distance_to_target = np.sqrt(dx**2 + dy**2 + dz**2)
-            if distance_to_target < 0.2:  # Adjust threshold as needed
-                terminated = True
+        #     # Terminate if too close to target
+        #     dx = self.state["x"] - self.target_position[0]
+        #     dy = self.state["y"] - self.target_position[1]
+        #     dz = self.state["z"] - self.target_position[2]
+        #     distance_to_target = np.sqrt(dx**2 + dy**2 + dz**2)
+        #     if distance_to_target < 0.2:  # Adjust threshold as needed
+        #         terminated = True
 
         truncated = False
         if self.train==False:
-            if reward>-0.5:
+            if reward>10:
                 self.target_idx=self.target_idx+1
                 if self.target_idx>=len(self.target_point_trajectory):
                     self.target_idx=len(self.target_point_trajectory)-1

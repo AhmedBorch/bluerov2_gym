@@ -35,13 +35,13 @@ env = DummyVecEnv([lambda: env])
 env = VecNormalize(env, training=True, norm_obs=True, norm_reward=True)
 
 # Load normalization statistics if available
-#env = VecNormalize.load("bluerov_vec_normalize_fast.pkl", env)
+env = VecNormalize.load("examples/200000_trained_network/bluerov_vec_normalize_fast.pkl", env)
 
 # Initialize PPO from scratch with MLP policy
-model = PPO("MultiInputPolicy", env, verbose=1)
+#model = PPO("MultiInputPolicy", env, verbose=1)
 
 # Load the pretrained model
-#model = PPO.load("bluerov_ppo_fast", env=env)
+model = PPO.load("examples/200000_trained_network/bluerov_ppo_fast", env=env)
 
 #training + callback initialisation
 callback = EpisodeStatsCallback()
@@ -49,11 +49,11 @@ model.learn(total_timesteps=200000, callback=callback, progress_bar=True)
 
 # After training
 stats = callback.get_stats()
-with open("training_stats.pkl", "wb") as f:
+with open("examples/training_stats.pkl", "wb") as f:
     pickle.dump(stats, f)
 
 # Save the updated model
-model.save("bluerov_ppo_scratch")
+model.save("examples/bluerov_ppo_scratch")
 
 # Save the updated environment normalization stats
-env.save("bluerov_vec_normalize_scratch.pkl")
+env.save("examples/bluerov_vec_normalize_scratch.pkl")
