@@ -35,13 +35,13 @@ env = DummyVecEnv([lambda: env])
 env = VecNormalize(env, training=True, norm_obs=True, norm_reward=True)
 
 # Load normalization statistics if available
-env = VecNormalize.load("examples/200000_trained_network/bluerov_vec_normalize_fast.pkl", env)
+##env = VecNormalize.load("examples/200000_trained_network/bluerov_vec_normalize_scratch.pkl", env)
 
 # Initialize PPO from scratch with MLP policy
-#model = PPO("MultiInputPolicy", env, verbose=1)
+model = PPO("MultiInputPolicy", env, verbose=1)
 
 # Load the pretrained model
-model = PPO.load("examples/200000_trained_network/bluerov_ppo_fast", env=env)
+#model = PPO.load("examples/200000_trained_network/bluerov_ppo_scratch", env=env)#, device="mps")
 
 #training + callback initialisation
 callback = EpisodeStatsCallback()

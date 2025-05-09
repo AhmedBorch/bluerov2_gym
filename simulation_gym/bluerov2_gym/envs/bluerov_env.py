@@ -129,10 +129,15 @@ class BlueRov(gym.Env):
 
         # Randomize the target position within the defined range (for x, y, z)
         if self.train:
+            self.state["theta"] = np.random.uniform(0, 2 * np.pi)
             def sample_point_in_spherical_shell(inner_radius=0.7, outer_radius=1.2):
                 r = ((np.random.uniform(inner_radius**3, outer_radius**3))**(1/3))
                 theta = np.random.uniform(0, 2 * np.pi)
-                phi = np.arccos(np.random.uniform(-1, 1))
+                # Bias toward cos(φ) = 0 → φ = π/2 (equator)
+                #NOW
+                phi= np.pi/2
+                #u = np.clip(np.random.normal(loc=0.0, scale=0.5), -1, 1)  # controls bias
+                #phi = np.arccos(u)
 
                 x = r * np.sin(phi) * np.cos(theta)
                 y = r * np.sin(phi) * np.sin(theta)
@@ -140,7 +145,7 @@ class BlueRov(gym.Env):
 
                 return np.array([x, y, z], dtype=np.float32)
     
-            self.target_position = sample_point_in_spherical_shell(inner_radius=1.0, outer_radius=2.0)
+            self.target_position = sample_point_in_spherical_shell(inner_radius=0.7, outer_radius=1.2)
             self.reward_fn = Reward(self.target_position)
 
         self.disturbance_dist = self.dynamics.reset()
@@ -189,7 +194,7 @@ class BlueRov(gym.Env):
 
         truncated = False
         if self.train==False:
-            if reward>10:
+            if reward>15:
                 self.target_idx=self.target_idx+1
                 if self.target_idx>=len(self.target_point_trajectory):
                     self.target_idx=len(self.target_point_trajectory)-1
