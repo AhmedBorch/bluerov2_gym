@@ -35,7 +35,7 @@ class BlueRov(gym.Env):
         #     [1, 0, -1]
         # ], dtype=np.float32)
 
-        key_points =1.5*np.array([
+        key_points =0.5*np.array([
             [1, 0, 0],
             [1, 1, 0],
             [0, 1, 0],
@@ -153,7 +153,7 @@ class BlueRov(gym.Env):
 
                 return np.array([x, y, z], dtype=np.float32)
     
-            self.obj_pos = sample_point_in_spherical_shell(inner_radius=0.8, outer_radius=1)
+            self.obj_pos = sample_point_in_spherical_shell(inner_radius=0.5, outer_radius=0.55)
         self.target_position = self.obj_pos-np.array([self.state["x"],self.state["y"],0])
         self.target_position = self.obj_pos - self.target_position / np.linalg.norm(self.target_position)*self.desired_distance
         self.target_orientation = np.arctan2((self.obj_pos[1]-self.target_position[1]),(self.obj_pos[0]-self.target_position[0]+1e-6))-np.pi/2#-np.pi/2 come from some systematic differences to make it work with the reference frame
@@ -208,9 +208,9 @@ class BlueRov(gym.Env):
         if self.train==True:
 
                 # Example conditions (please change these to your own conditions)
-            if abs(self.state["z"]) > 3.0:
+            if abs(self.state["z"]) > 0.6:
                 terminated = True
-            if abs(self.state["x"]) > 3.0 or abs(self.state["y"]) > 3.0:
+            if abs(self.state["x"]) > 0.6 or abs(self.state["y"]) > 0.6:
                 terminated = True
 
             

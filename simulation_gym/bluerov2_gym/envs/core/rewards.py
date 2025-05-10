@@ -1,7 +1,7 @@
 import numpy as np
 
 class Reward:
-    def __init__(self, target_position, target_orientation,desired_distance, distance_tolerance=0.05):
+    def __init__(self, target_position, target_orientation,desired_distance, distance_tolerance=0.2):
         self.target_position = np.array(target_position, dtype=np.float32)
         self.target_orientation = np.array(target_orientation, dtype=np.float32)
         self.desired_distance = desired_distance  # Ideal stop distance from the object
@@ -26,8 +26,8 @@ class Reward:
         # Alignment: Reward dot product between heading and direction to target (in 2D)
         alignment = np.arctan2(np.sin(self.target_orientation - theta), np.cos(self.target_orientation - theta)+1e-6)
         alignment_error = np.abs(alignment)
-        alignment_reward = -5 * alignment_error
-
+        alignment_reward = -10 * alignment_error
+        print(alignment_reward,flush=True)
         
         # Velocity penalty: Reward for reducing velocity when close to the target
         velocity_penalty = 0.05 * np.linalg.norm(velocity)
@@ -35,8 +35,8 @@ class Reward:
             velocity_penalty *= 2.0
         success_bonus=0
        
-        if (distance < self.distance_tolerance) and (alignment < 0.1):
-            success_bonus=5  # Positive reward for "success" state
+        if (distance < self.distance_tolerance) and (alignment_error < 0.1):
+            success_bonus=20  # Positive reward for "success" state
 
         # Combined reward
         reward = alignment_reward + distance_reward - velocity_penalty -z_error*3 + success_bonus
