@@ -29,7 +29,7 @@ from EpisodeStatsCallback import EpisodeStatsCallback
 
 
 # Create and wrap the environment
-env = gym.make("BlueRov-v0")
+env = gym.make("BlueRov-v0",max_episode_steps=100)
 env.unwrapped.train = True
 env = DummyVecEnv([lambda: env])
 env = VecNormalize(env, training=True, norm_obs=True, norm_reward=True)
@@ -45,7 +45,7 @@ model = PPO("MultiInputPolicy", env, verbose=1)
 
 #training + callback initialisation
 callback = EpisodeStatsCallback()
-model.learn(total_timesteps=200000, callback=callback, progress_bar=True)
+model.learn(total_timesteps=20000, callback=callback, progress_bar=True)
 
 # After training
 stats = callback.get_stats()

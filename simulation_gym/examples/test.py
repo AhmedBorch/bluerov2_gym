@@ -18,7 +18,7 @@ def test_agent():
 
     
     # Create the environment with rendering enabled
-    env = gym.make("BlueRov-v0", render_mode="human",max_episode_steps=400)
+    env = gym.make("BlueRov-v0", render_mode="human",max_episode_steps=2000)
 
     # Load the trained model and normalization stats
     model = PPO.load("examples/bluerov_ppo_scratch")
