@@ -50,33 +50,33 @@ class DynamicEpisodeLengthWrapper(gym.Wrapper):
         return obs, reward, terminated, truncated, info
 
 def episode_length_schedule(timestep):
-    if timestep < 50_000:
+    if timestep < 200_000:
+        return 50
+    elif timestep < 1000_000:
         return 100
-    elif timestep < 150_000:
-        return 200
     else:
-        return 300
+        return 200
 
 
 # Create and wrap the environment
-env = gym.make("BlueRov-v0",max_episode_steps=300)
+env = gym.make("BlueRov-v0")
 env.unwrapped.train = True
 env = DynamicEpisodeLengthWrapper(env, schedule_fn=episode_length_schedule)
 env = DummyVecEnv([lambda: env])
 env = VecNormalize(env, training=True, norm_obs=True, norm_reward=True)
 
 # Load normalization statistics if available
-##env = VecNormalize.load("examples/200000_trained_network/bluerov_vec_normalize_scratch.pkl", env)
+#env = VecNormalize.load("examples/bluerov_vec_normalize_scratch.pkl", env)
 
 # Initialize PPO from scratch with MLP policy
 model = PPO("MultiInputPolicy", env, verbose=1)
 
 # Load the pretrained model
-#model = PPO.load("examples/200000_trained_network/bluerov_ppo_scratch", env=env)#, device="mps")
+#model = PPO.load("examples/bluerov_ppo_scratch", env=env)#, device="mps")
 
 #training + callback initialisation
 callback = EpisodeStatsCallback()
-model.learn(total_timesteps=200000, callback=callback, progress_bar=True)
+model.learn(total_timesteps=2000000, callback=callback, progress_bar=True)
 
 # After training
 stats = callback.get_stats()
