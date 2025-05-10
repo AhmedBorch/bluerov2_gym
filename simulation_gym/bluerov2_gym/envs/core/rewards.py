@@ -18,13 +18,13 @@ class Reward:
         vec_to_target = self.target_position - position
         distance = np.linalg.norm(vec_to_target)  # Calculate 3D distance
         
-        # Distance reward: We want the robot to stop at a certain distance
-        distance_error = np.abs(distance - self.desired_distance)
+       
         
-        distance_reward = -10 * (distance_error ** 2)
+        
+        distance_reward = -10 * (distance ** 2)
          # Penalize deviations from the target distance
         # Alignment: Reward dot product between heading and direction to target (in 2D)
-        alignment = np.arctan2(np.sin(self.target_orientation - theta), np.cos(self.target_orientation - theta))
+        alignment = np.arctan2(np.sin(self.target_orientation - theta), np.cos(self.target_orientation - theta)+1e-6)
         alignment_error = np.abs(alignment)
         alignment_reward = -5 * alignment_error
 
@@ -35,7 +35,7 @@ class Reward:
             velocity_penalty *= 2.0
         success_bonus=0
        
-        if (distance_error < self.distance_tolerance) and (alignment < 0.1):
+        if (distance < self.distance_tolerance) and (alignment < 0.1):
             success_bonus=5  # Positive reward for "success" state
 
         # Combined reward

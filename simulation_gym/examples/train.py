@@ -26,11 +26,42 @@ from EpisodeStatsCallback import EpisodeStatsCallback
 # # keep track of the training
 # wandb.init(project="bluerov-ppo", config={"learning_rate": 3e-4, "gamma": 0.99, "epochs": 10})
 # >>>>>>> Stashed changes
+class DynamicEpisodeLengthWrapper(gym.Wrapper):
+    def __init__(self, env, schedule_fn):
+        super().__init__(env)
+        self.schedule_fn = schedule_fn
+        self.current_step = 0
+        self.max_episode_steps = self.schedule_fn(self.current_step)
+        self.elapsed_steps = 0
+
+    def reset(self, **kwargs):
+        self.max_episode_steps = self.schedule_fn(self.current_step)
+        self.elapsed_steps = 0
+        return self.env.reset(**kwargs)
+
+    def step(self, action):
+        self.current_step += 1
+        self.elapsed_steps += 1
+        obs, reward, terminated, truncated, info = self.env.step(action)
+
+        if self.elapsed_steps >= self.max_episode_steps:
+            truncated = True
+
+        return obs, reward, terminated, truncated, info
+
+def episode_length_schedule(timestep):
+    if timestep < 50_000:
+        return 100
+    elif timestep < 150_000:
+        return 200
+    else:
+        return 300
 
 
 # Create and wrap the environment
-env = gym.make("BlueRov-v0",max_episode_steps=100)
+env = gym.make("BlueRov-v0",max_episode_steps=300)
 env.unwrapped.train = True
+env = DynamicEpisodeLengthWrapper(env, schedule_fn=episode_length_schedule)
 env = DummyVecEnv([lambda: env])
 env = VecNormalize(env, training=True, norm_obs=True, norm_reward=True)
 
@@ -45,7 +76,7 @@ model = PPO("MultiInputPolicy", env, verbose=1)
 
 #training + callback initialisation
 callback = EpisodeStatsCallback()
-model.learn(total_timesteps=20000, callback=callback, progress_bar=True)
+model.learn(total_timesteps=200000, callback=callback, progress_bar=True)
 
 # After training
 stats = callback.get_stats()

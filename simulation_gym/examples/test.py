@@ -139,13 +139,13 @@ def manual_control():
 
         if key == "x":
             break
-        elif key == "w":
-            action[0] = 1.0  # Forward
-        elif key == "s":
-            action[0] = -1.0  # Backward
         elif key == "a":
-            action[1] = -1.0  # Left
+            action[0] = 1.0  # Forward
         elif key == "d":
+            action[0] = -1.0  # Backward
+        elif key == "w":
+            action[1] = -1.0  # Left
+        elif key == "s":
             action[1] = 1.0  # Right
         elif key == "q":
             action[3] = -1.0  # Rotate left

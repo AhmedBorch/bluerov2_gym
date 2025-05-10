@@ -88,7 +88,7 @@ class BlueRov(gym.Env):
         }
 
         self.target_orientation = np.array([1e-6])-np.pi/2#-np.pi/2 come from some systematic differences to make it work with the reference frame
-        self.desired_distance = 1
+        self.desired_distance = 0.5
         self.reward_fn = Reward(self.obj_pos,self.target_orientation,self.desired_distance)
 
         self.action_space = spaces.Box(
@@ -138,7 +138,7 @@ class BlueRov(gym.Env):
         # Randomize the target position within the defined range (for x, y, z)
         if self.train:
             self.state["theta"] = np.random.uniform(0, 2 * np.pi)
-            def sample_point_in_spherical_shell(inner_radius=0.7, outer_radius=1.2):
+            def sample_point_in_spherical_shell(inner_radius=0.8, outer_radius=1):
                 r = ((np.random.uniform(inner_radius**3, outer_radius**3))**(1/3))
                 theta = np.random.uniform(0, 2 * np.pi)
                 # Bias toward cos(φ) = 0 → φ = π/2 (equator)
@@ -153,7 +153,7 @@ class BlueRov(gym.Env):
 
                 return np.array([x, y, z], dtype=np.float32)
     
-            self.obj_pos = sample_point_in_spherical_shell(inner_radius=0.7, outer_radius=1.2)
+            self.obj_pos = sample_point_in_spherical_shell(inner_radius=0.8, outer_radius=1)
         self.target_position = self.obj_pos-np.array([self.state["x"],self.state["y"],0])
         self.target_position = self.obj_pos - self.target_position / np.linalg.norm(self.target_position)*self.desired_distance
         self.target_orientation = np.arctan2((self.obj_pos[1]-self.target_position[1]),(self.obj_pos[0]-self.target_position[0]+1e-6))-np.pi/2#-np.pi/2 come from some systematic differences to make it work with the reference frame
