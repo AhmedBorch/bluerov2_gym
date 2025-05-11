@@ -144,7 +144,7 @@ class BlueRov(gym.Env):
                 # Bias toward cos(φ) = 0 → φ = π/2 (equator)
                 #NOW
                 #phi= np.pi/2
-                u = np.clip(np.random.normal(loc=0.0, scale=0.5), -1, 1)  # controls bias
+                u = np.clip(np.random.normal(loc=0.0, scale=0.5), -0.2, 0.2)  # controls bias
                 phi = np.arccos(u)
 
                 x = r * np.sin(phi) * np.cos(theta)
@@ -153,7 +153,7 @@ class BlueRov(gym.Env):
 
                 return np.array([x, y, z], dtype=np.float32)
     
-            self.obj_pos = sample_point_in_spherical_shell(inner_radius=0.8, outer_radius=1.5)
+            self.obj_pos = sample_point_in_spherical_shell(inner_radius=0.55, outer_radius=1)
         self.target_position = self.obj_pos-np.array([self.state["x"],self.state["y"],0])
         self.target_position = self.obj_pos - self.target_position / np.linalg.norm(self.target_position)*self.desired_distance
         self.target_orientation = np.arctan2((self.obj_pos[1]-self.target_position[1]),(self.obj_pos[0]-self.target_position[0]+1e-6))-np.pi/2#-np.pi/2 come from some systematic differences to make it work with the reference frame
