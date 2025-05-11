@@ -208,9 +208,9 @@ class BlueRov(gym.Env):
         if self.train==True:
 
                 # Example conditions (please change these to your own conditions)
-            if abs(self.state["z"]) > 1.5:
+            if abs(self.state["z"]) > 2:
                 terminated = True
-            if abs(self.state["x"]) > 1.5 or abs(self.state["y"]) > 1.5:
+            if abs(self.state["x"]) > 2 or abs(self.state["y"]) > 2:
                 terminated = True
 
             
