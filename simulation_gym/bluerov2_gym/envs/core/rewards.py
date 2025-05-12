@@ -39,5 +39,5 @@ class Reward:
             success_bonus=20  # Positive reward for "success" state
 
         # Combined reward
-        reward = alignment_reward + distance_reward - velocity_penalty -z_error*3 + success_bonus
+        reward = alignment_reward + distance_reward# - velocity_penalty -z_error*3 + success_bonus
         return reward

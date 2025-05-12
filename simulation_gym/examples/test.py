@@ -37,7 +37,7 @@ def test_agent():
     for episode in range(episodes):
         obs, _ = env.reset()
         env.render()  # Initial render
-        
+        #env.unwrapped.random_points=True
         episode_reward = 0
         step_count = 0
 
@@ -79,16 +79,16 @@ def test_agent():
 
 
 def test_agent_manual_input():
-    env = gym.make("BlueRov-v0", render_mode="human")
+    env = gym.make("BlueRov-v0", render_mode="human",max_episode_steps=2000)
 
-    episodes = 200
+    episodes = 2000
 
     for episode in range(episodes):
         obs, _ = env.reset()
         env.render()  # Initial render
         episode_reward = 0
         step_count = 0
-
+        
         print(f"\nStarting Episode {episode + 1}")
 
         while True:
@@ -128,7 +128,7 @@ def manual_control():
     - Q/E: Rotate
     - R/F: Up/Down
     """
-    env = gym.make("BlueRov-v0", render_mode="human")
+    env = gym.make("BlueRov-v0", render_mode="human",max_episode_steps=2000)
     obs, _ = env.reset()
     env.render()
 
@@ -157,6 +157,7 @@ def manual_control():
             action[2] = -1.0  # Down
         print(f"Action: {action}")
         obs, reward, terminated, truncated, info = env.step(action)
+        print(obs["theta"])
         env.unwrapped.step_sim()
 
         print(

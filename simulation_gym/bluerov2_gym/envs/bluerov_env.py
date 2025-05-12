@@ -35,7 +35,7 @@ class BlueRov(gym.Env):
         #     [1, 0, -1]
         # ], dtype=np.float32)
 
-        key_points =0.5*np.array([
+        key_points =np.array([
             [1, 0, 0],
             [1, 1, 0],
             [0, 1, 0],
@@ -116,6 +116,7 @@ class BlueRov(gym.Env):
         )
         self.dt = 0.1  # Time step
         self.render_mode = render_mode
+        self.random_points=False
 
         
     
@@ -137,16 +138,16 @@ class BlueRov(gym.Env):
         
 
         # Randomize the target position within the defined range (for x, y, z)
-        if self.train:
-            self.state["theta"] = np.random.uniform(0, 2 * np.pi)
+        if self.train==True or self.random_points==True:
+            self.state["theta"] = np.random.uniform(-np.pi, np.pi)
             def sample_point_in_spherical_shell(inner_radius=0.8, outer_radius=1):
                 r = ((np.random.uniform(inner_radius**3, outer_radius**3))**(1/3))
                 theta = np.random.uniform(0, 2 * np.pi)
                 # Bias toward cos(φ) = 0 → φ = π/2 (equator)
                 #NOW
-                #phi= np.pi/2
-                u = np.clip(np.random.normal(loc=0.0, scale=0.5), -0.2, 0.2)  # controls bias
-                phi = np.arccos(u)
+                phi= np.pi/2
+                #u = np.clip(np.random.normal(loc=0.0, scale=0.5), -0.2, 0.2)  # controls bias
+                #phi = np.arccos(u)
 
                 x = r * np.sin(phi) * np.cos(theta)
                 y = r * np.sin(phi) * np.sin(theta)
@@ -154,7 +155,7 @@ class BlueRov(gym.Env):
 
                 return np.array([x, y, z], dtype=np.float32)
     
-            self.obj_pos = sample_point_in_spherical_shell(inner_radius=0.55, outer_radius=1)
+            self.obj_pos = sample_point_in_spherical_shell(inner_radius=0.55, outer_radius=1.5)
         self.target_position = self.obj_pos-np.array([self.state["x"],self.state["y"],0])
         self.target_position = self.obj_pos - self.target_position / np.linalg.norm(self.target_position)*self.desired_distance
         self.target_orientation = np.arctan2((self.obj_pos[1]-self.target_position[1]),(self.obj_pos[0]-self.target_position[0]+1e-6))-np.pi/2#-np.pi/2 come from some systematic differences to make it work with the reference frame
@@ -175,11 +176,11 @@ class BlueRov(gym.Env):
         obs = {k: np.array([v], dtype=np.float32) for k, v in self.state.items()}
         
 
-        
-        self.target_position = self.obj_pos-np.array([self.state["x"],self.state["y"],0])
-        self.target_position = self.obj_pos - self.target_position / np.linalg.norm(self.target_position)*self.desired_distance 
-        self.target_orientation = np.arctan2((self.obj_pos[1]-self.target_position[1]),(self.obj_pos[0]-self.target_position[0]+1e-6))-np.pi/2#-np.pi/2 come from some systematic differences to make it work with the reference frame
-        self.reward_fn = Reward(self.target_position,self.target_orientation,self.desired_distance)
+        if self.train==False or self.random_points==True:
+            self.target_position = self.obj_pos-np.array([self.state["x"],self.state["y"],0])
+            self.target_position = self.obj_pos - self.target_position / np.linalg.norm(self.target_position)*self.desired_distance 
+            self.target_orientation = np.arctan2((self.obj_pos[1]-self.target_position[1]),(self.obj_pos[0]-self.target_position[0]+1e-6))-np.pi/2#-np.pi/2 come from some systematic differences to make it work with the reference frame
+            self.reward_fn = Reward(self.target_position,self.target_orientation,self.desired_distance)
 
         obs["target_x"] = np.array([self.target_position[0]], dtype=np.float32)
         obs["target_y"] = np.array([self.target_position[1]], dtype=np.float32)
@@ -188,7 +189,7 @@ class BlueRov(gym.Env):
         reward = self.reward_fn.get_reward(obs)
         
         if self.train==False:
-            if reward>0:
+            if reward>-0.2:
                 self.obj_idx=self.obj_idx+1
                 if self.obj_idx>=len(self.target_point_trajectory):
                     self.obj_idx=len(self.target_point_trajectory)-1

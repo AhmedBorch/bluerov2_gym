@@ -78,7 +78,7 @@ model = PPO("MultiInputPolicy", env,gamma=0.99,learning_rate=2.5e-4, verbose=1)
 #training + callback initialisation
 
 callback = EpisodeStatsCallback()
-model.learn(total_timesteps=400000, callback=callback, progress_bar=True)
+model.learn(total_timesteps=200000, callback=callback, progress_bar=True)
 
 # After training
 stats = callback.get_stats()
