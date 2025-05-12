@@ -65,6 +65,7 @@ class Dynamics:
         state["y"] += (vx * np.sin(theta) + vy * np.cos(theta)) * self.dt
         state["z"] += vz * self.dt
         state["theta"] += omega * self.dt
+        state["theta"] = (state["theta"]+np.pi)%(2*np.pi)-np.pi
 
         # Velocity updates
         state["vx"] += (

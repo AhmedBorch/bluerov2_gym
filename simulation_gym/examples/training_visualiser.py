@@ -6,7 +6,7 @@ from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
 
 
-file_path = os.path.join(os.path.dirname(__file__), "200000_trained_network/training_stats.pkl")
+file_path = os.path.join(os.path.dirname(__file__), "200000_trained_network/training_stats0.pkl")
 with open(file_path, "rb") as f:
     stats = pickle.load(f)
 

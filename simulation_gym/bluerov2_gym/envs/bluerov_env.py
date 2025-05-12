@@ -103,7 +103,7 @@ class BlueRov(gym.Env):
                 "x": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
                 "y": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
                 "z": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
-                "theta": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
+                "theta": spaces.Box(-np.pi, np.pi, shape=(1,), dtype=np.float32),
                 "vx": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
                 "vy": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
                 "vz": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
@@ -111,6 +111,7 @@ class BlueRov(gym.Env):
                 "target_x": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
                 "target_y": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
                 "target_z": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
+                "target_angle": spaces.Box(-np.pi, np.pi, shape=(1,), dtype=np.float32),
             }
         )
         self.dt = 0.1  # Time step
@@ -163,7 +164,7 @@ class BlueRov(gym.Env):
         obs["target_x"] = np.array([self.target_position[0]], dtype=np.float32)
         obs["target_y"] = np.array([self.target_position[1]], dtype=np.float32)
         obs["target_z"] = np.array([self.target_position[2]], dtype=np.float32)
-
+        obs["target_angle"] = np.array([self.target_orientation], dtype=np.float32)
         self.reward_fn = Reward(self.target_position,self.target_orientation,self.desired_distance)
 
 
@@ -183,7 +184,7 @@ class BlueRov(gym.Env):
         obs["target_x"] = np.array([self.target_position[0]], dtype=np.float32)
         obs["target_y"] = np.array([self.target_position[1]], dtype=np.float32)
         obs["target_z"] = np.array([self.target_position[2]], dtype=np.float32)
-
+        obs["target_angle"] = np.array([self.target_orientation], dtype=np.float32)
         reward = self.reward_fn.get_reward(obs)
         
         if self.train==False:

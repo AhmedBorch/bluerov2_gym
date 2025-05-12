@@ -21,11 +21,11 @@ def test_agent():
     env = gym.make("BlueRov-v0", render_mode="human",max_episode_steps=2000)
 
     # Load the trained model and normalization stats
-    model = PPO.load("examples/bluerov_ppo_scratch")
+    model = PPO.load("examples/bluerov_ppo_scratch2")
 
     # Create a dummy vec env for proper normalization
     vec_env = DummyVecEnv([lambda: gym.make("BlueRov-v0")])
-    vec_env = VecNormalize.load("examples/bluerov_vec_normalize_scratch.pkl", vec_env) #forgot to save it, skip for now
+    vec_env = VecNormalize.load("examples/bluerov_vec_normalize_scratch2.pkl", vec_env) #forgot to save it, skip for now
 
     # Configure normalization for inference
     vec_env.training = False

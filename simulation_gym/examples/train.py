@@ -50,9 +50,11 @@ class DynamicEpisodeLengthWrapper(gym.Wrapper):
         return obs, reward, terminated, truncated, info
 
 def episode_length_schedule(timestep):
-    if timestep < 700_000:
+    if timestep < 100_000:
         return 50
-    elif timestep < 1500_000:
+    elif timestep < 200_000:
+        return 100
+    elif timestep < 400_000:
         return 150
     else:
         return 200
@@ -76,7 +78,7 @@ model = PPO("MultiInputPolicy", env,gamma=0.99,learning_rate=2.5e-4, verbose=1)
 #training + callback initialisation
 
 callback = EpisodeStatsCallback()
-model.learn(total_timesteps=5000000, callback=callback, progress_bar=True)
+model.learn(total_timesteps=400000, callback=callback, progress_bar=True)
 
 # After training
 stats = callback.get_stats()
