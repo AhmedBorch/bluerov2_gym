@@ -68,17 +68,17 @@ env = DummyVecEnv([lambda: env])
 env = VecNormalize(env, training=True, norm_obs=True, norm_reward=True)
 
 # Load normalization statistics if available
-#env = VecNormalize.load("examples/200000_trained_network/bluerov_vec_normalize_scratch.pkl", env)
+env = VecNormalize.load("examples/only_dist_200000_hole_in_sphere/bluerov_vec_normalize_scratch2.pkl", env)
 # Initialize PPO from scratch with MLP policy
-model = PPO("MultiInputPolicy", env,gamma=0.99,learning_rate=2.5e-4, verbose=1)
+#model = PPO("MultiInputPolicy", env,gamma=0.99,learning_rate=2.5e-4, verbose=1)
 
 # Load the pretrained model
-#model = PPO.load("examples/200000_trained_network/bluerov_ppo_scratch", env=env)#, device="mps")
+model = PPO.load("examples/only_dist_200000_hole_in_sphere/bluerov_ppo_scratch2.zip", env=env)#, device="mps")
 
 #training + callback initialisation
 
 callback = EpisodeStatsCallback()
-model.learn(total_timesteps=200000, callback=callback, progress_bar=True)
+model.learn(total_timesteps=800000, callback=callback, progress_bar=True)
 
 # After training
 stats = callback.get_stats()
