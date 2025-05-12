@@ -21,11 +21,11 @@ def test_agent():
     env = gym.make("BlueRov-v0", render_mode="human",max_episode_steps=400)
 
     # Load the trained model and normalization stats
-    model = PPO.load("examples/bluerov_ppo_finetuned_orientation")
+    model = PPO.load("examples/bluerov_ppo_new_disk_penalty_3")
 
     # Create a dummy vec env for proper normalization
     vec_env = DummyVecEnv([lambda: gym.make("BlueRov-v0")])
-    vec_env = VecNormalize.load("examples/bluerov_vec_normalize_finetuned_orientation.pkl", vec_env) #forgot to save it, skip for now
+    vec_env = VecNormalize.load("examples/bluerov_vec_normalize_new_disk_penalty_3.pkl", vec_env) #forgot to save it, skip for now
 
     # Configure normalization for inference
     vec_env.training = False
@@ -33,6 +33,7 @@ def test_agent():
 
     # Run episodes
     episodes = 5  # Number of episodes to visualize
+
 
     for episode in range(episodes):
         obs, _ = env.reset()
@@ -74,6 +75,8 @@ def test_agent():
                 print(f"Episode {episode + 1} finished after {step_count} steps")
                 print(f"Total reward: {episode_reward:.2f}")
                 break
+            # if reward > -6:
+            #     break
 
     env.close()
 

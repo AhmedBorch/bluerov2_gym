@@ -25,14 +25,14 @@ class BlueRov(gym.Env):
         # Define original waypoints
         key_points = np.array([
             [1, 1, 1],
-            [1, 1, 0],
-            [0, 1, -1],
-            [-1, 1, -0.6],
-            [-1, 0, 0.8],
-            [-1, -1, -0.7],
-            [0, -1, 1],
-            [1, -1, 0],
-            [1, 0, -1]
+            [3, 0, -1],
+            [2, 3, 3],
+            [1, 5, 1],
+            [-1, -2, 0.8],
+            [-1, 0, -0.7],
+            [0, -3, 2],
+            [1, -4, 0],
+            [4, 0, -1]
         ], dtype=np.float32)
 
         # Set how many points to generate between each pair (including endpoints)
@@ -58,6 +58,8 @@ class BlueRov(gym.Env):
 
         self.target_idx = 0
         self.target_position = self.target_point_trajectory[0]
+        # print(f"Target position: {self.target_position}")
+        # print(f"Target trajectory: {self.target_point_trajectory}")
         self.reward_fn = Reward(self.target_position)
         # self.reward_fn = Reward()
         self.target_range = [-1, 1]
@@ -118,6 +120,10 @@ class BlueRov(gym.Env):
             low, high = self.target_range
             self.target_position = np.random.uniform(low=low, high=high, size=(3,)).astype(np.float32)
             self.reward_fn = Reward(self.target_position)
+        else:
+            # Move to next point in trajectory each episode during testing
+            self.target_idx = (self.target_idx + 10) % len(self.target_point_trajectory)
+            self.target_position = self.target_point_trajectory[self.target_idx]
 
         self.disturbance_dist = self.dynamics.reset()
         obs = {k: np.array([v], dtype=np.float32) for k, v in self.state.items()}
@@ -138,28 +144,26 @@ class BlueRov(gym.Env):
 
         terminated = False
         # Example conditions (please change these to your own conditions)
-        if abs(self.state["z"]) > 3.0:
+        if abs(self.state["x"]) > 10.0 or abs(self.state["y"]) > 10.0 or abs(self.state["z"]) > 10.0:
             terminated = True
-        if abs(self.state["x"]) > 3.0 or abs(self.state["y"]) > 3.0:
-            terminated = True
-        if self.train==True:
-            # Terminate if too close to target
-            dx = self.state["x"] - self.target_position[0]
-            dy = self.state["y"] - self.target_position[1]
-            dz = self.state["z"] - self.target_position[2]
-            distance_to_target = np.sqrt(dx**2 + dy**2 + dz**2)
-            if distance_to_target < 0.2:  # Adjust threshold as needed
-                terminated = True
+        # if self.train==True:
+        #     # Terminate if too close to target
+        #     dx = self.state["x"] - self.target_position[0]
+        #     dy = self.state["y"] - self.target_position[1]
+        #     dz = self.state["z"] - self.target_position[2]
+        #     distance_to_target = np.sqrt(dx**2 + dy**2 + dz**2)
+            # if distance_to_target < 1.2:  # Adjust threshold as needed
+            #     terminated = True
 
         truncated = False
 
-        if self.train==False:
-            if reward>-0.5:
-                self.target_idx=self.target_idx+1
-                if self.target_idx>=len(self.target_point_trajectory):
-                    self.target_idx=len(self.target_point_trajectory)-1
-                self.target_position=self.target_point_trajectory[self.target_idx]
-                self.reward_fn = Reward(self.target_position)
+        # if self.train==False:
+        #     if reward>-0.5:
+        #         self.target_idx=self.target_idx+1
+        #         if self.target_idx>=len(self.target_point_trajectory):
+        #             self.target_idx=len(self.target_point_trajectory)-1
+        #         self.target_position=self.target_point_trajectory[self.target_idx]
+        #         self.reward_fn = Reward(self.target_position)
 
 
         return obs, reward, terminated, truncated, {}
