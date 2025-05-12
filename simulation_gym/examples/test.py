@@ -128,10 +128,10 @@ def manual_control():
     - Q/E: Rotate
     - R/F: Up/Down
     """
-    env = gym.make("BlueRov-v0", render_mode="human",max_episode_steps=2000)
+    env = gym.make("BlueRov-v0", render_mode="human",max_episode_steps=50)
     obs, _ = env.reset()
     env.render()
-
+    env.unwrapped.random_points=True
     while True:
         action = np.array([0.0, 0.0, 0.0, 0.0])
 
