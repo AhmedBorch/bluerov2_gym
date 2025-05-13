@@ -27,7 +27,7 @@ class Reward:
         alignment = np.arctan2(np.sin(self.target_orientation - theta), np.cos(self.target_orientation - theta)+1e-6)
         alignment_error = np.abs(alignment)
         alignment_reward = -10 * alignment_error
-        print(alignment_reward,flush=True)
+        #print(alignment_reward,flush=True)
         
         # Velocity penalty: Reward for reducing velocity when close to the target
         velocity_penalty = -0.05 * np.linalg.norm(velocity)
@@ -37,13 +37,13 @@ class Reward:
 
         if alignment_error <  0.2:  # Apply a stronger penalty when close
             spin_penalty *= -3.0
-            success_bonus+=2
+            success_bonus+=3
         if distance <  self.distance_tolerance:  # Apply a stronger penalty when close
             velocity_penalty *= -3.0
-            success_bonus+=2
+            success_bonus+=3
         
        
-        if (distance < self.distance_tolerance) and (alignment_error < 0.2):
+        if (distance < self.distance_tolerance/2) and (alignment_error < 0.2):
             success_bonus=16  # Positive reward for "success" state
 
         # Combined reward

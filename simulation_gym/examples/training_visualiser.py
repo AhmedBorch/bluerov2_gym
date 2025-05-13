@@ -7,6 +7,7 @@ from matplotlib.colors import Normalize
 
 
 file_path = os.path.join(os.path.dirname(__file__), "training_stats.pkl")
+#file_path = "/Users/MatthiasSchmitt/Desktop/Studium/10 Semester/AI_Project2/bluerov2_gym/simulation_gym/examples/cluster_check_2mio/training_stats.pkl"
 with open(file_path, "rb") as f:
     stats = pickle.load(f)
 

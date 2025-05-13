@@ -48,6 +48,7 @@ def main():
         def reset(self, **kwargs):
             self.max_episode_steps = self.schedule_fn(self.current_step)
             self.elapsed_steps = 0
+            #print(f"[Env {id(self)}] Reset at local step {self.current_step} → max_episode_steps: {self.max_episode_steps}")
             return self.env.reset(**kwargs)
 
         def step(self, action):
@@ -60,43 +61,50 @@ def main():
 
             return obs, reward, terminated, truncated, info
 
-    def episode_length_schedule(timestep):
-        if timestep < 200_000:
+
+    NUM_ENVS = 12
+
+    def episode_length_schedule(local_step):
+        approx_global_step = local_step * NUM_ENVS  # Approximate global progress
+        if approx_global_step < 800_000:
             return 150
-        elif timestep < 400_000:
+        elif approx_global_step < 1_400_000:
             return 300
-        elif timestep < 800_000:
+        elif approx_global_step < 2_000_000:
             return 400
         else:
             return 500
-    
+
+        
     def make_env():
         def _init():
             env = gym.make("BlueRov-v0")
-            env.unwrapped.train = True
+            env = env.unwrapped  # REMOVE default TimeLimit wrapper
+            env.train = True
             return DynamicEpisodeLengthWrapper(env, schedule_fn=episode_length_schedule)
         return _init
     
-    NUM_ENVS=12
+    
     # Create and wrap the environment
    
 
     env_fns = [make_env() for _ in range(NUM_ENVS)]
     env = SubprocVecEnv(env_fns)
-    env = VecNormalize(env, training=True, norm_obs=True, norm_reward=True)
+    env = VecNormalize(env, training=True, norm_obs=True, norm_reward=True, clip_reward=10.0)
 
     # Load normalization statistics if available
-    #env = VecNormalize.load("examples/only_dist_200000_hole_in_sphere/bluerov_vec_normalize_scratch2.pkl", env)
+    #env = VecNormalize.load("examples/2mio_donut/bluerov_vec_normalize_scratch2.pkl", env)
     # Initialize PPO from scratch with MLP policy
-    model = PPO("MultiInputPolicy", env,gamma=0.99,learning_rate=2.5e-4, verbose=1)
+    model = PPO("MultiInputPolicy", env,gamma=0.99,learning_rate=2.5e-4, verbose=1,
+    tensorboard_log="./tensorboard_logs/")
 
     # Load the pretrained model
-    #model = PPO.load("examples/only_dist_200000_hole_in_sphere/bluerov_ppo_scratch2.zip", env=env)#, device="mps")
+    #model = PPO.load("examples/2mio_donut/bluerov_ppo_scratch2.zip", env=env)#, device="mps")
 
     #training + callback initialisation
 
     callback = EpisodeStatsCallback()
-    model.learn(total_timesteps=2000000, callback=callback, progress_bar=True)
+    model.learn(total_timesteps=8000000, callback=callback, progress_bar=True)
 
     # After training
     stats = callback.get_stats()

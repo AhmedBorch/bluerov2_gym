@@ -35,12 +35,12 @@ class BlueRov(gym.Env):
         #     [1, 0, -1]
         # ], dtype=np.float32)
 
-        key_points =np.array([
-            [1, 0, 0],
-            [1, 1, 0],
-            [0, 1, 0],
-            [-1, 1, 0],
-            [-1, 0, 0],
+        key_points =2*np.array([
+            [1, 0, 0.8],
+            [1, 1, -0.7],
+            [0, 1, 0.8],
+            [-1, 1, -0.7],
+            [-1, 0, 0.2],
             [-1, -1, 0],
             [0, -1, 0],
             [1, -1, 0],
@@ -146,7 +146,7 @@ class BlueRov(gym.Env):
                 # Bias toward cos(φ) = 0 → φ = π/2 (equator)
                 #NOW
                 #phi= np.pi/2
-                u = np.clip(np.random.normal(loc=0.0, scale=0.5), -0.3, 0.3)  # controls bias
+                u = np.clip(np.random.normal(loc=0.0, scale=0.5), -0.7, 0.7)  # controls bias
                 phi = np.arccos(u)
 
                 x = r * np.sin(phi) * np.cos(theta)
@@ -155,7 +155,7 @@ class BlueRov(gym.Env):
 
                 return np.array([x, y, z], dtype=np.float32)
     
-            self.obj_pos = sample_point_in_spherical_shell(inner_radius=0.5, outer_radius=1)
+            self.obj_pos = sample_point_in_spherical_shell(inner_radius=0.5, outer_radius=3)
         help_vec = np.array([self.obj_pos[0],self.obj_pos[1],0])-np.array([self.state["x"],self.state["y"],0])
         self.target_position = self.obj_pos - help_vec / np.linalg.norm(help_vec)*self.desired_distance
         self.target_orientation = np.arctan2((self.obj_pos[1]-self.target_position[1]),(self.obj_pos[0]-self.target_position[0]+1e-6))-np.pi/2#-np.pi/2 come from some systematic differences to make it work with the reference frame
@@ -189,7 +189,7 @@ class BlueRov(gym.Env):
         reward = self.reward_fn.get_reward(obs)
         
         if self.train==False:
-            if reward>-0.2:
+            if reward>0.3:
                 self.obj_idx=self.obj_idx+1
                 if self.obj_idx>=len(self.target_point_trajectory):
                     self.obj_idx=len(self.target_point_trajectory)-1
@@ -210,9 +210,9 @@ class BlueRov(gym.Env):
         if self.train==True:
 
                 # Example conditions (please change these to your own conditions)
-            if abs(self.state["z"]) > 2:
+            if abs(self.state["z"]) > 3:
                 terminated = True
-            if abs(self.state["x"]) > 2 or abs(self.state["y"]) > 2:
+            if abs(self.state["x"]) > 3 or abs(self.state["y"]) > 3:
                 terminated = True
 
             
