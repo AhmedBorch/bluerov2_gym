@@ -84,7 +84,7 @@ def test_agent():
 def test_agent_manual_input():
     env = gym.make("BlueRov-v0", render_mode="human")
 
-    episodes = 200
+    episodes = 300
 
     for episode in range(episodes):
         obs, _ = env.reset()

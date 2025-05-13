@@ -19,14 +19,15 @@ env = DummyVecEnv([lambda: env])
 env = VecNormalize(env, training=True, norm_obs=True, norm_reward=True)
 
 # Load normalization statistics if available
-env = VecNormalize.load("examples/bluerov_vec_normalize_fast.pkl", env)
+# env = VecNormalize.load("examples/bluerov_vec_normalize_fast.pkl", env)
 
 # Load the pretrained model
-model = PPO.load("examples/bluerov_ppo_fast", env=env)
+# model = PPO.load("examples/bluerov_ppo_fast", env=env)
 
 #training + callback initialisation
 callback = EpisodeStatsCallback()
-model.learn(total_timesteps=1000000, callback=callback, progress_bar=True)
+model = PPO("MultiInputPolicy", env, verbose=1)
+model.learn(total_timesteps=100000, callback=callback, progress_bar=True)
 
 # After training
 stats = callback.get_stats()
@@ -35,7 +36,7 @@ with open("training_stats.pkl", "wb") as f:
 
 
 # Save the updated model
-model.save("examples/bluerov_ppo_new_disk_penalty_3")
+model.save("examples/bluerov_ppo_just_rotate")
 
 # Save the updated environment normalization stats
-env.save("examples/bluerov_vec_normalize_new_disk_penalty_3.pkl")
+env.save("examples/bluerov_vec_just_rotate.pkl")
