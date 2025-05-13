@@ -53,27 +53,28 @@ def test_agent():
     camera_server_process = start_camera_server()
 
     # Create the environment with rendering enabled
-    env = gym.make("BlueRov-v0", render_mode="human",max_episode_steps=4000)
+    env = gym.make("BlueRov-v0", render_mode="human",max_episode_steps=400)
 
     # Load the trained model and normalization stats
-    model = PPO.load("examples/bluerov_ppo_good", custom_objects={
+    model = PPO.load("examples/bluerov_ppo_scratch3.zip", custom_objects={
     "clip_range": lambda x: x,
     "lr_schedule": lambda x: x})
 
 
     # Create a dummy vec env for proper normalization
     
-    vec_env = DummyVecEnv([lambda: gym.make("BlueRov-v0",render_mode = None)])
-    vec_env = VecNormalize.load("examples/bluerov_vec_normalize_good.pkl", vec_env) #forgot to save it, skip for now
+    #vec_env = DummyVecEnv([lambda: gym.make("BlueRov-v0",render_mode = None)])
+    #vec_env = VecNormalize.load("examples/bluerov_vec_normalize_good.pkl", vec_env) #forgot to save it, skip for now
 
     # Configure normalization for inference
-    vec_env.training = False
-    vec_env.norm_reward = False
+    #vec_env.training = False
+    #vec_env.norm_reward = False
 
     # Run episodes
     episodes = 1  # Number of episodes to visualize
 
     actions_log = []
+    observations_log = []
 
     for episode in range(episodes):
         obs, _ = env.reset()
@@ -105,7 +106,7 @@ def test_agent():
 
 
             # Normalize the observation using the loaded statistics
-            obs_normalized = vec_env.normalize_obs(obs)
+            obs_normalized = obs#vec_env.normalize_obs(obs)
 
             # Get the action from the trained model
             action, _ = model.predict(obs_normalized, deterministic=True)
@@ -113,6 +114,7 @@ def test_agent():
 
             # Saving the actions taken
             actions_log.append(action.copy())  # Use .copy() to avoid unexpected mutation
+            observations_log.append(obs.copy())
 
 
             # Take the action in the environment
@@ -143,6 +145,7 @@ def test_agent():
     
     #Saving actions taken
     np.save("tlaloc/tested_actions_log.npy", np.array(actions_log))
+    np.save("tlaloc/tested_observations_log.npy", np.array(observations_log))
 
     # Shut down the camera server before closing the environment
     stop_camera_server(camera_server_process)
