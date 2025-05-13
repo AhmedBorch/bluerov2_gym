@@ -61,6 +61,20 @@ def main():
 
             return obs, reward, terminated, truncated, info
 
+    class DynamicGoalWrapper(gym.Wrapper):
+        def __init__(self, env, goal_schedule_fn):
+            super().__init__(env)
+            self.goal_schedule_fn = goal_schedule_fn
+            self.current_step = 0
+
+        def reset(self, **kwargs):
+            goal_distance = self.goal_schedule_fn(self.current_step)
+            return self.env.reset(goal_distance=goal_distance, **kwargs)
+
+        def step(self, action):
+            self.current_step += 1
+            return self.env.step(action)
+
 
     NUM_ENVS = 12
 
@@ -75,13 +89,32 @@ def main():
         else:
             return 500
 
+    def goal_distance_schedule(local_step):
+        approx_global_step = local_step * NUM_ENVS
+        if approx_global_step < 2_000_000:
+            return 1.0
+        elif approx_global_step < 3_000_000:
+            return 2.0
+        elif approx_global_step < 5_000_000:
+            return 3.0
+        elif approx_global_step < 8_000_000:
+            return 4.0
+        elif approx_global_step < 10_000_000:
+            return 5.0
+        elif approx_global_step < 13_000_000:
+            return 6.0
+        else:
+            return 8.0
+
         
     def make_env():
         def _init():
             env = gym.make("BlueRov-v0")
             env = env.unwrapped  # REMOVE default TimeLimit wrapper
             env.train = True
-            return DynamicEpisodeLengthWrapper(env, schedule_fn=episode_length_schedule)
+            env = DynamicEpisodeLengthWrapper(env, schedule_fn=episode_length_schedule)
+            #env = DynamicGoalWrapper(env, goal_schedule_fn=goal_distance_schedule)
+            return env
         return _init
     
     
@@ -90,7 +123,7 @@ def main():
 
     env_fns = [make_env() for _ in range(NUM_ENVS)]
     env = SubprocVecEnv(env_fns)
-    env = VecNormalize(env, training=True, norm_obs=True, norm_reward=True, clip_reward=10.0)
+    #env = VecNormalize(env, training=True, norm_obs=True, norm_reward=True, clip_reward=10.0)
 
     # Load normalization statistics if available
     #env = VecNormalize.load("examples/2mio_donut/bluerov_vec_normalize_scratch2.pkl", env)
@@ -104,7 +137,7 @@ def main():
     #training + callback initialisation
 
     callback = EpisodeStatsCallback()
-    model.learn(total_timesteps=8000000, callback=callback, progress_bar=True)
+    model.learn(total_timesteps=2000000, callback=callback, progress_bar=True) #12mio
 
     # After training
     stats = callback.get_stats()
@@ -112,10 +145,10 @@ def main():
         pickle.dump(stats, f)
 
     # Save the updated model
-    model.save("examples/bluerov_ppo_scratch2")
+    model.save("examples/bluerov_ppo_scratch3")
 
     # Save the updated environment normalization stats
-    env.save("examples/bluerov_vec_normalize_scratch2.pkl")
+    #env.save("examples/bluerov_vec_normalize_scratch2.pkl")
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ class Reward:
         self.target_orientation = np.array(target_orientation, dtype=np.float32)
         self.desired_distance = desired_distance  # Ideal stop distance from the object
         self.distance_tolerance = distance_tolerance  # Acceptable tolerance for distance from the target
+        self.stay_dest_count = 0
         
     def get_reward(self, obs):
         # Extract position, velocity, and orientation from the observation
@@ -26,7 +27,7 @@ class Reward:
         # Alignment: Reward dot product between heading and direction to target (in 2D)
         alignment = np.arctan2(np.sin(self.target_orientation - theta), np.cos(self.target_orientation - theta)+1e-6)
         alignment_error = np.abs(alignment)
-        alignment_reward = -10 * alignment_error
+        alignment_reward = -10 * (alignment_error)
         #print(alignment_reward,flush=True)
         
         # Velocity penalty: Reward for reducing velocity when close to the target
@@ -44,8 +45,14 @@ class Reward:
         
        
         if (distance < self.distance_tolerance/2) and (alignment_error < 0.2):
-            success_bonus=16  # Positive reward for "success" state
-
+            success_bonus+=16  # Positive reward for "success" state
+            #if alignment<0.08:
+             #   success_bonus+=10
+              #  self.stay_dest_count+=1
+               # if self.stay_dest_count==30:
+                #    success_bonus=1000
+        #elif self.stay_dest_count>0:
+         #   self.stay_dest_count-=1
         # Combined reward
         reward = alignment_reward + distance_reward - velocity_penalty - spin_penalty -z_error*3 + success_bonus
         return reward
