@@ -51,13 +51,13 @@ class BlueRovRenderer:
     def get_robot_position(self):
         return [self.state["x"], self.state["y"], self.state["z"]]
 
-    def plot_marker(self, position, orientation=None, marker_id=None):
+    def plot_marker(self, position, orientation=None, marker_id=None,size=1,color=0x00FF00):
         name = f"marker_{marker_id}" if marker_id else f"marker_{len(self.trail_markers)}"
 
         if orientation is not None:
             # Shaft of the arrow
-            shaft_length = 0.04
-            shaft_radius = 0.005
+            shaft_length = 0.04*size
+            shaft_radius = 0.01*size/2
             shaft_geom = g.Cylinder(height=shaft_length, radius=shaft_radius)
             # Rotate cylinder from Z to X
             shaft_tf = tf.rotation_matrix(np.pi / 2, [0, 1, 0])
@@ -65,23 +65,23 @@ class BlueRovRenderer:
             
 
             # Head of the arrow (sphere)
-            head_radius = 0.01
+            head_radius = 0.02*size/2
             head_geom = g.Sphere(head_radius)
             head_tf = tf.translation_matrix([0,shaft_length/2, 0])
 
 
             # Add shaft and head as subpaths
-            self.vis[name]["shaft"].set_object(shaft_geom, g.MeshLambertMaterial(color=0x00FF00))
+            self.vis[name]["shaft"].set_object(shaft_geom, g.MeshLambertMaterial(color=color))
             self.vis[name]["shaft"].set_transform(shaft_tf)
 
-            self.vis[name]["head"].set_object(head_geom, g.MeshLambertMaterial(color=0x00FF00))
+            self.vis[name]["head"].set_object(head_geom, g.MeshLambertMaterial(color=color))
             self.vis[name]["head"].set_transform(head_tf)
 
             # Now apply yaw rotation (around Z) to the whole arrow
             rotation = tf.rotation_matrix(orientation, [0, 0, 1])
         else:
             # No orientation → just a sphere
-            self.vis[name].set_object(g.Sphere(0.02), g.MeshLambertMaterial(color=0x00FF00))
+            self.vis[name].set_object(g.Sphere(0.02), g.MeshLambertMaterial(color=color))
             rotation = np.eye(4)
 
         # Final placement
@@ -90,7 +90,7 @@ class BlueRovRenderer:
         self.vis[name].set_transform(final_tf)
 
 
-        self.trail_markers.append(name)     
+        self.trail_markers.append(name)
 
 
     def plot_target(self, target_position):
@@ -124,4 +124,4 @@ class BlueRovRenderer:
         # Plot marker every 10 steps
         self.step_counter += 1
         if self.step_counter % 2 == 0:
-            self.plot_marker(position=translation, orientation=self.state["theta"],marker_id=self.step_counter)
+            self.plot_marker(position=translation, orientation=self.state["theta"], marker_id=self.step_counter)

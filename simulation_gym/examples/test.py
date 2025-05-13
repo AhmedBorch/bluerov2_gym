@@ -7,10 +7,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
 import bluerov2_gym  # This import will automatically register the environment
-
-
 import webbrowser
-
 import threading
 import requests
 import cv2
@@ -21,7 +18,7 @@ import os
 
 def start_camera_server():
     script_path = os.path.join(os.path.dirname(__file__), "camera_server.py")
-    print(f"🚀 Starting camera server from: {script_path}")
+    print(f"Starting camera server from: {script_path}")
     
     process = subprocess.Popen(
         ["python", script_path],
@@ -36,8 +33,8 @@ def start_camera_server():
         stream.close()
 
     # Start threads to log stdout and stderr
-    threading.Thread(target=log_output, args=(process.stdout, "STDOUT"), daemon=True).start()
-    threading.Thread(target=log_output, args=(process.stderr, "STDERR"), daemon=True).start()
+    #threading.Thread(target=log_output, args=(process.stdout, "STDOUT"), daemon=True).start()
+    #threading.Thread(target=log_output, args=(process.stderr, "STDERR"), daemon=True).start()
     
     return process
 
@@ -46,7 +43,7 @@ def open_camera_tab():
     
 def stop_camera_server(process):
     """Stop the camera server by terminating the subprocess."""
-    print("🛑 Stopping camera server...")
+    print("Stopping camera server...")
     process.terminate()  # Gracefully terminate the camera server
     process.wait()  # Wait for the process to fully terminate
 
@@ -56,14 +53,18 @@ def test_agent():
     camera_server_process = start_camera_server()
 
     # Create the environment with rendering enabled
-    env = gym.make("BlueRov-v0", render_mode="human",max_episode_steps=400)
+    env = gym.make("BlueRov-v0", render_mode="human",max_episode_steps=4000)
 
     # Load the trained model and normalization stats
-    model = PPO.load("examples/200000_trained_network/bluerov_ppo_fast")
+    model = PPO.load("examples/bluerov_ppo_good", custom_objects={
+    "clip_range": lambda x: x,
+    "lr_schedule": lambda x: x})
+
 
     # Create a dummy vec env for proper normalization
-    vec_env = DummyVecEnv([lambda: gym.make("BlueRov-v0")])
-    vec_env = VecNormalize.load("examples/200000_trained_network/bluerov_vec_normalize_fast.pkl", vec_env) #forgot to save it, skip for now
+    
+    vec_env = DummyVecEnv([lambda: gym.make("BlueRov-v0",render_mode = None)])
+    vec_env = VecNormalize.load("examples/bluerov_vec_normalize_good.pkl", vec_env) #forgot to save it, skip for now
 
     # Configure normalization for inference
     vec_env.training = False
@@ -72,8 +73,7 @@ def test_agent():
     # Run episodes
     episodes = 1  # Number of episodes to visualize
 
-    test_i=0
-
+    actions_log = []
 
     for episode in range(episodes):
         obs, _ = env.reset()
@@ -89,7 +89,7 @@ def test_agent():
             # pblishing positional data to the html, so we can get it when rnning the camera server
             position = np.array([env.unwrapped.state["x"],env.unwrapped.state["y"],env.unwrapped.state["z"]])
             orientation = np.array([0,env.unwrapped.state["theta"],env.unwrapped.state["omega"]])
-            target_buoy =np.array([env.unwrapped.target_position])
+            target_buoy =np.array([env.unwrapped.obj_pos])
             trajectory_markers = np.array([env.unwrapped.renderer.trail_positions])# we want the position of the traectory points
             
             try:
@@ -110,6 +110,10 @@ def test_agent():
             # Get the action from the trained model
             action, _ = model.predict(obs_normalized, deterministic=True)
             # action, _ = model.predict(obs, deterministic=True)
+
+            # Saving the actions taken
+            actions_log.append(action.copy())  # Use .copy() to avoid unexpected mutation
+
 
             # Take the action in the environment
             obs, reward, terminated, truncated, info = env.step(action)
@@ -137,6 +141,9 @@ def test_agent():
                 print(f"Total reward: {episode_reward:.2f}")
                 break
     
+    #Saving actions taken
+    np.save("tlaloc/tested_actions_log.npy", np.array(actions_log))
+
     # Shut down the camera server before closing the environment
     stop_camera_server(camera_server_process)
 

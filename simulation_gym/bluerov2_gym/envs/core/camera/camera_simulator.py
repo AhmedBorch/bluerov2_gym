@@ -3,16 +3,18 @@ import pybullet_data
 import numpy as np
 import time
 
+
+
 class CameraSimulator:
     def __init__(self):
-        p.connect(p.DIRECT) # Direct mode (no rendering)
+        p.connect(p.GUI) # Direct mode (no rendering)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         
 
         # Add this line before adding objects to the simulation
         p.resetSimulation()
         p.setGravity(0, 0, 0)  # Disable gravity
-
+        self.debug = False
         # Load the ground plane
         #self.plane_id = p.loadURDF("plane.urdf")
         
@@ -29,7 +31,7 @@ class CameraSimulator:
             p.resetBaseVelocity(ball_id, [0, 0, 0])  # Zero initial velocity
             p.resetBasePositionAndOrientation(ball_id, p.getBasePositionAndOrientation(ball_id)[0], [0, 0, 0, 1])  # Zero orientation
             p.resetBaseVelocity(ball_id, [0, 0, 0])  # Zero velocity
-            print("Ball added at:", p.getBasePositionAndOrientation(ball_id))
+            if self.debug: print("Ball added at:", p.getBasePositionAndOrientation(ball_id))
 
         # Camera settings
         self.width = 640
@@ -40,9 +42,9 @@ class CameraSimulator:
         self.far = 100
         self.current_traj_leng = 0 #carefull in case you want to run multiple runs after each other
         
-        print("All loaded bodies:")
+        if self.debug:print("All loaded bodies:")
         for i in range(p.getNumBodies()):
-            print(f"Body {i}: {p.getBodyInfo(i)} at {p.getBasePositionAndOrientation(i)}")
+            if self.debug:print(f"Body {i}: {p.getBodyInfo(i)} at {p.getBasePositionAndOrientation(i)}")
 
 
 
@@ -57,7 +59,7 @@ class CameraSimulator:
         Simulates a camera located at `position` with `orientation` (yaw, pitch, roll in radians).
         """
 
-        print(f"[DEBUG] Camera position: {position}, orientation: {orientation}")
+        if self.debug:print(f"[DEBUG] Camera position: {position}, orientation: {orientation}")
     
         # Convert Euler to quaternion
 
@@ -66,7 +68,7 @@ class CameraSimulator:
         if new_buoy_positions is not None:
             new_buoy_positions = np.array(new_buoy_positions).flatten()
             assert len(new_buoy_positions) == 3, "Buoy pos must be of length 3"
-            print(f"[DEBUG] Updating buoy position: {new_buoy_positions} {type(new_buoy_positions)}", flush=True)
+            if self.debug:print(f"[DEBUG] Updating buoy position: {new_buoy_positions} {type(new_buoy_positions)}", flush=True)
             p.resetBasePositionAndOrientation(self.ball_ids[0], new_buoy_positions.tolist(), [0, 0, 0, 1])
 
         if trajectory_markers is not None:

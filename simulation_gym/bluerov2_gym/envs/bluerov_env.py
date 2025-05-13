@@ -23,17 +23,39 @@ class BlueRov(gym.Env):
     
 
         # Define original waypoints
-        key_points = 3*np.array([
+        # key_points = np.array([
+        #     [1, 1, 1],
+        #     [1, 1, 0],
+        #     [0, 1, -1],
+        #     [-1, 1, -0.6],
+        #     [-1, 0, 0.8],
+        #     [-1, -1, -0.7],
+        #     [0, -1, 1],
+        #     [1, -1, 0],
+        #     [1, 0, -1]
+        # ], dtype=np.float32)
+
+        key_points =np.array([
             [1, 0, 0],
-            [1, 1, 0],
+            [1, 1, -1],
             [0, 1, 0],
-            [-1, 1, 0],
+            [-1, 1, 1],
             [-1, 0, 0],
             [-1, -1, 0],
-            [0, -1, 0],
-            [1, -1, 0],
+            [0, -1, -1],
+            [1, -1, -1],
+            [1, 0, 0],
+            [1, 0, 0],
+            [1, 1, -1],
+            [0, 1, 0],
+            [-1, 1, 1],
+            [-1, 0, 0],
+            [-1, -1, 0],
+            [0, -1, -1],
+            [1, -1, -1],
             [1, 0, 0]
         ], dtype=np.float32)
+        key_points = key_points*0.5
 
         # Set how many points to generate between each pair (including endpoints)
         points_per_segment = 11  # Gives 10 steps (0.0 to 1.0 in 0.1 increments)
@@ -55,23 +77,29 @@ class BlueRov(gym.Env):
         # Convert to numpy array
         self.target_point_trajectory = np.array(trajectory, dtype=np.float32)
 
-
-        self.target_idx = 0
-        self.target_position = self.target_point_trajectory[0]
-        self.reward_fn = Reward(self.target_position)
-        # self.reward_fn = Reward()
+        
+        self.obj_idx = 0
+        self.obj_pos = self.target_point_trajectory[0]
+        self.target_position = self.obj_pos # for now
+        
+        
+        
         self.target_range = [-1, 1]
         self.dynamics = Dynamics()
         self.state = {
             "x": 0,
             "y": 0,
             "z": 0,
-            "theta": 0,
+            "theta":0,
             "vx": 0,
             "vy": 0,
             "vz": 0,
             "omega": 0,
         }
+
+        self.target_orientation = np.array([1e-6])-np.pi/2#-np.pi/2 come from some systematic differences to make it work with the reference frame
+        self.desired_distance = 0.5
+        self.reward_fn = Reward(self.obj_pos,self.target_orientation,self.desired_distance)
 
         self.action_space = spaces.Box(
             low=-1.0,
@@ -85,7 +113,7 @@ class BlueRov(gym.Env):
                 "x": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
                 "y": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
                 "z": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
-                "theta": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
+                "theta": spaces.Box(-np.pi, np.pi, shape=(1,), dtype=np.float32),
                 "vx": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
                 "vy": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
                 "vz": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
@@ -93,11 +121,15 @@ class BlueRov(gym.Env):
                 "target_x": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
                 "target_y": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
                 "target_z": spaces.Box(-np.inf, np.inf, shape=(1,), dtype=np.float32),
+                "target_angle": spaces.Box(-np.pi, np.pi, shape=(1,), dtype=np.float32),
             }
         )
         self.dt = 0.1  # Time step
         self.render_mode = render_mode
+        self.random_points=False
 
+        
+    
 
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
@@ -113,29 +145,67 @@ class BlueRov(gym.Env):
             "omega": 0,
         }
 
-        # Randomize the target position within the defined range (for x, y, z)
-        if self.train==True:
-            low, high = self.target_range
-            self.target_position = np.random.uniform(low=low, high=high, size=(3,)).astype(np.float32)
-            self.reward_fn = Reward(self.target_position)
+        
 
+        # Randomize the target position within the defined range (for x, y, z)
+        if self.train==True or self.random_points==True:
+            self.state["theta"] = np.random.uniform(-np.pi, np.pi)
+            def sample_point_in_spherical_shell(inner_radius=0.8, outer_radius=1):
+                r = ((np.random.uniform(inner_radius**3, outer_radius**3))**(1/3))
+                theta = np.random.uniform(0, 2 * np.pi)
+                # Bias toward cos(φ) = 0 → φ = π/2 (equator)
+                #NOW
+                #phi= np.pi/2
+                u = np.clip(np.random.normal(loc=0.0, scale=0.5), -0.3, 0.3)  # controls bias
+                phi = np.arccos(u)
+
+                x = r * np.sin(phi) * np.cos(theta)
+                y = r * np.sin(phi) * np.sin(theta)
+                z = r * np.cos(phi)
+
+                return np.array([x, y, z], dtype=np.float32)
+    
+            self.obj_pos = sample_point_in_spherical_shell(inner_radius=0.5, outer_radius=1)
+        help_vec = np.array([self.obj_pos[0],self.obj_pos[1],0])-np.array([self.state["x"],self.state["y"],0])
+        self.target_position = self.obj_pos - help_vec / np.linalg.norm(help_vec)*self.desired_distance
+        self.target_orientation = np.arctan2((self.obj_pos[1]-self.target_position[1]),(self.obj_pos[0]-self.target_position[0]+1e-6))-np.pi/2#-np.pi/2 come from some systematic differences to make it work with the reference frame
+        
         self.disturbance_dist = self.dynamics.reset()
         obs = {k: np.array([v], dtype=np.float32) for k, v in self.state.items()}
         obs["target_x"] = np.array([self.target_position[0]], dtype=np.float32)
         obs["target_y"] = np.array([self.target_position[1]], dtype=np.float32)
         obs["target_z"] = np.array([self.target_position[2]], dtype=np.float32)
+        obs["target_angle"] = np.array([self.target_orientation], dtype=np.float32)
+        self.reward_fn = Reward(self.target_position,self.target_orientation,self.desired_distance)
+
 
         return obs, {}
 
     def step(self, action):
         self.dynamics.step(self.state, action)
         obs = {k: np.array([v], dtype=np.float32) for k, v in self.state.items()}
+        
+
+        if self.train==False or self.random_points==True:
+            help_vec = np.array([self.obj_pos[0],self.obj_pos[1],0])-np.array([self.state["x"],self.state["y"],0])
+            self.target_position = self.obj_pos - help_vec / np.linalg.norm(help_vec)*self.desired_distance
+            self.target_orientation = np.arctan2((self.obj_pos[1]-self.target_position[1]),(self.obj_pos[0]-self.target_position[0]+1e-6))-np.pi/2#-np.pi/2 come from some systematic differences to make it work with the reference frame
+            self.reward_fn = Reward(self.target_position,self.target_orientation,self.desired_distance)
+
         obs["target_x"] = np.array([self.target_position[0]], dtype=np.float32)
         obs["target_y"] = np.array([self.target_position[1]], dtype=np.float32)
         obs["target_z"] = np.array([self.target_position[2]], dtype=np.float32)
-
+        obs["target_angle"] = np.array([self.target_orientation], dtype=np.float32)
         reward = self.reward_fn.get_reward(obs)
+        
+        if self.train==False:
+            if reward>-0.2:
+                self.obj_idx=self.obj_idx+1
+                if self.obj_idx>=len(self.target_point_trajectory):
+                    self.obj_idx=len(self.target_point_trajectory)-1
+                self.obj_pos=self.target_point_trajectory[self.obj_idx]
 
+                
         terminated = False
         # Example conditions (please change these to your own conditions)
         if abs(self.state["z"]) > 10.0:
@@ -143,14 +213,22 @@ class BlueRov(gym.Env):
         if abs(self.state["x"]) > 15.0 or abs(self.state["y"]) > 15.0:
             terminated = True
 
-        truncated = False
+        
+        
+        
 
-        if reward>-0.5:
-            self.target_idx=self.target_idx+1
-            if self.target_idx>=len(self.target_point_trajectory):
-                self.target_idx=len(self.target_point_trajectory)-1
-            self.target_position=self.target_point_trajectory[self.target_idx]
-            self.reward_fn = Reward(self.target_position)
+        if self.train==True:
+
+                # Example conditions (please change these to your own conditions)
+            if abs(self.state["z"]) > 2:
+                terminated = True
+            if abs(self.state["x"]) > 2 or abs(self.state["y"]) > 2:
+                terminated = True
+
+            
+
+        truncated = False
+                
 
         return obs, reward, terminated, truncated, {}
 
@@ -159,4 +237,5 @@ class BlueRov(gym.Env):
 
     def step_sim(self):
         self.renderer.step_sim(self.state)
-        self.renderer.plot_target(self.target_position)
+        self.renderer.plot_target(self.obj_pos)
+        self.renderer.plot_marker(self.target_position,orientation=self.target_orientation,marker_id="Target_state",size=7,color=0xFFFF00)
