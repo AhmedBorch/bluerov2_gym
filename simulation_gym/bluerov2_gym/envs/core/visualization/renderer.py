@@ -5,6 +5,22 @@ import numpy as np
 
 import bluerov2_gym
 
+def look_at(camera_position, target_position, up_vector):
+    forward = (target_position - camera_position)
+    forward /= np.linalg.norm(forward)
+
+    right = np.cross(up_vector, forward)
+    right /= np.linalg.norm(right)
+
+    up = np.cross(forward, right)
+
+    rotation = np.eye(4)
+    rotation[:3, 0] = right
+    rotation[:3, 1] = up
+    rotation[:3, 2] = forward
+    rotation[:3, 3] = camera_position
+
+    return rotation
 
 class BlueRovRenderer:
 
@@ -23,18 +39,22 @@ class BlueRovRenderer:
         else:
             self.vis = None  # Don't even instantiate the visualizer
 
-    
     def set_camera(self):
-        """Set up the camera with a specific position and orientation."""
-        # Example camera position (x, y, z) and orientation (rotation matrix or Euler angles)
-        camera_position = np.array([2, 2, 2])  # Position of the camera
-        look_at_position = np.array([0, 0, 0])  # Point the camera is looking at
-        up_direction = np.array([0, 0, 1])  # The "up" direction of the camera
+        # Move camera very close to the target to simulate zoom
+        target_position = np.array([0.0, 0.0, -1.0])  # The object you want to view
+        direction = np.array([-1.0, 0.0, 0.0])        # Direction from target to camera
 
-        # Create the transformation matrix to position the camera
-        self.vis["camera"].set_transform(
-            meshcat.transformations.look_at(camera_position, look_at_position, up_direction)
-        )
+        # Normalize and scale for zoom
+        distance = 0.1  # Smaller = closer (e.g., 0.1 is very close)
+        direction = direction / np.linalg.norm(direction)
+        camera_position = target_position + direction * distance
+
+        up_direction = np.array([0.0, 0.0, 1.0])  # Standard up vector
+
+        # Apply only set_property (NO transform)
+        self.vis["/Cameras/default"].set_property("position", camera_position.tolist())
+        self.vis["/Cameras/default"].set_property("lookAt", target_position.tolist())
+        self.vis["/Cameras/default"].set_property("up", up_direction.tolist())
 
     def render(self, model_path):
         if self.render_mode != "human":
