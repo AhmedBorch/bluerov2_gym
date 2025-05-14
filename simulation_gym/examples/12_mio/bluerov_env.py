@@ -160,7 +160,7 @@ class BlueRov(gym.Env):
 
         # Randomize the target position within the defined range (for x, y, z)
         if self.train==True or self.random_points==True:
-            #self.state["x"],self.state["y"],self.state["z"]=np.random.uniform(-6, 6),np.random.uniform(-6, 6),np.random.uniform(-6, 6)
+            self.state["x"],self.state["y"],self.state["z"]=np.random.uniform(-6, 6),np.random.uniform(-6, 6),np.random.uniform(-6, 6)
             self.state["theta"] = np.random.uniform(-np.pi, np.pi)
             def sample_point_in_spherical_shell(inner_radius=0.8, outer_radius=1):
                 r = ((np.random.uniform(inner_radius**3, outer_radius**3))**(1/3))
@@ -177,7 +177,7 @@ class BlueRov(gym.Env):
 
                 return np.array([x, y, z], dtype=np.float32)
     
-            self.obj_pos = sample_point_in_spherical_shell(inner_radius=0.1, outer_radius=5)
+            self.obj_pos = sample_point_in_spherical_shell(inner_radius=0.5, outer_radius=5)
         help_vec = np.array([self.obj_pos[0],self.obj_pos[1],0])-np.array([self.state["x"],self.state["y"],0])
         self.target_position = self.obj_pos - help_vec / np.linalg.norm(help_vec)*self.desired_distance
         self.target_orientation = np.arctan2((self.obj_pos[1]-self.target_position[1]),(self.obj_pos[0]-self.target_position[0]+1e-6))-np.pi/2#-np.pi/2 come from some systematic differences to make it work with the reference frame
@@ -234,9 +234,9 @@ class BlueRov(gym.Env):
         if self.train==True:
 
                 # Example conditions (please change these to your own conditions)
-            if abs(self.state["z"]) > 6.2:
+            if abs(self.state["z"]) > 5:
                 terminated = True
-            if abs(self.state["x"]) > 6.2 or abs(self.state["y"]) > 6.2:
+            if abs(self.state["x"]) > 5 or abs(self.state["y"]) > 5:
                 terminated = True
 
             #if self.reward_fn.stay_dest_count>50:

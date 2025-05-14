@@ -53,7 +53,7 @@ for i, (reward, color) in enumerate(zip(episode_rewards, colors)):
 
 plt.xlabel("Step within Episode", fontsize=17)  # Increased fontsize
 plt.ylabel("Reward at Step", fontsize=17)  # Increased fontsize
-plt.ylim([0.1,-0.3])
+#plt.ylim([0.1,-0.3])
 plt.grid(True)
 plt.tick_params(axis='both', labelsize=14)  # Increased tick number size
 

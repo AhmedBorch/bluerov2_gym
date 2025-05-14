@@ -130,12 +130,13 @@ def main():
     env = VecNormalize(env, training=True, norm_obs=True, norm_reward=True, clip_reward=10.0)
 
     # Load normalization statistics if available
-    env = VecNormalize.load("examples/12_mio/bluerov_vec_normalize_scratch2.pkl", env)
+    #env = VecNormalize.load("examples/2mio_donut/bluerov_vec_normalize_scratch2.pkl", env)
     # Initialize PPO from scratch with MLP policy
-    #model = PPO("MultiInputPolicy", env,gamma=0.99,learning_rate=2.5e-4, verbose=1,tensorboard_log="./tensorboard_logs/")
+    model = PPO("MultiInputPolicy", env,gamma=0.99,learning_rate=2.5e-4, verbose=1,
+    tensorboard_log="./tensorboard_logs/")
 
     # Load the pretrained model
-    model = PPO.load("examples/12_mio/bluerov_ppo_scratch2.zip", env=env,tensorboard_log="./tensorboard_logs/")#, device="mps")
+    #model = PPO.load("examples/2mio_donut/bluerov_ppo_scratch2.zip", env=env)#, device="mps")
 
     #training + callback initialisation
 
