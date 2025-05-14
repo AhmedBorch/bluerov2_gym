@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 # Shutdown function
 def shutdown():
-    print("🛑 Shutting down the server...")
+    print("Shutting down the server...")
     os.kill(os.getpid(), signal.SIGINT)
 
 camera = CameraSimulator()
@@ -39,7 +39,7 @@ def update_state():
 # MJPEG stream
 @app.route('/video_feed')
 def video_feed():
-    print("🔁 /video_feed requested")
+    print(" /video_feed requested")
     return Response(generate_camera_frame(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # Serve the HTML
@@ -66,16 +66,16 @@ def generate_camera_frame():
 
         frame = camera.render_camera_view(position, orientation,new_buoy_positions=target_buoy,trajectory_markers=trajectory_markers)#change later to multiple target buoys
         if frame is None or frame.size == 0:
-            print("❌ Invalid frame received!")
+            print(" Invalid frame received!")
 
         if frame.shape != (480, 640, 3):  # Or whatever shape you're expecting
-            print(f"⚠️ Unexpected frame shape: {frame.shape}")
+            print(f"Unexpected frame shape: {frame.shape}")
         # If the image is in RGB format and you want to ensure it's in BGR before encoding
         frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         ret, png = cv2.imencode('.png', frame_bgr)
 
         if not ret:
-            print("⚠️ Failed to encode frame to JPEG")
+            print(" Failed to encode frame to JPEG")
             continue
         yield (b'--frame\r\n'
                b'Content-Type: image/png\r\n\r\n' + png.tobytes() + b'\r\n')
@@ -96,7 +96,7 @@ def open_camera_tab():
         except requests.exceptions.ConnectionError:
             print(f"Retrying... {i + 1}/{max_retries}")
         time.sleep(0.5)  # Wait a bit before retrying
-    print("⚠️ Failed to open browser tab: server didn't respond.")
+    print(" Failed to open browser tab: server didn't respond.")
 
 
 # HTML content directly embedded

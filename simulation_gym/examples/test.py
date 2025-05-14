@@ -56,19 +56,19 @@ def test_agent():
     env = gym.make("BlueRov-v0", render_mode="human",max_episode_steps=400)
 
     # Load the trained model and normalization stats
-    model = PPO.load("examples/bluerov_ppo_scratch3.zip", custom_objects={
+    model = PPO.load("examples/bluerov_ppo_good.zip", custom_objects={
     "clip_range": lambda x: x,
     "lr_schedule": lambda x: x})
 
 
     # Create a dummy vec env for proper normalization
     
-    #vec_env = DummyVecEnv([lambda: gym.make("BlueRov-v0",render_mode = None)])
-    #vec_env = VecNormalize.load("examples/bluerov_vec_normalize_good.pkl", vec_env) #forgot to save it, skip for now
+    vec_env = DummyVecEnv([lambda: gym.make("BlueRov-v0",render_mode = "none")])
+    vec_env = VecNormalize.load("examples/bluerov_vec_normalize_good.pkl", vec_env) #forgot to save it, skip for now
 
     # Configure normalization for inference
-    #vec_env.training = False
-    #vec_env.norm_reward = False
+    vec_env.training = False
+    vec_env.norm_reward = False
 
     # Run episodes
     episodes = 1  # Number of episodes to visualize
@@ -106,7 +106,7 @@ def test_agent():
 
 
             # Normalize the observation using the loaded statistics
-            obs_normalized = obs#vec_env.normalize_obs(obs)
+            obs_normalized = vec_env.normalize_obs(obs)
 
             # Get the action from the trained model
             action, _ = model.predict(obs_normalized, deterministic=True)

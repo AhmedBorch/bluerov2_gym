@@ -10,14 +10,14 @@ from bluerov2_gym.envs.core.visualization.renderer import BlueRovRenderer
 
 
 class BlueRov(gym.Env):
-    metadata = {"render_modes": ["human"], "render_fps": 30}
+    metadata = {"render_modes": ["human","none"], "render_fps": 30}
 
     def __init__(self, render_mode=None):
         super().__init__()
         with resources.path("bluerov2_gym.assets", "BlueRov2.dae") as asset_path:
             self.model_path = str(asset_path)
 
-        self.renderer = BlueRovRenderer()
+        self.renderer = BlueRovRenderer(render_mode=render_mode)
         self.train = False
         # a target position instead of penalizing only from the origin
     

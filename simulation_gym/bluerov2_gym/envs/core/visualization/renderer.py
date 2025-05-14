@@ -8,16 +8,33 @@ import bluerov2_gym
 
 class BlueRovRenderer:
 
-    metadata = {"render_modes": ["human"], "render_fps": 30}
+    metadata = {"render_modes": ["human", "none"], "render_fps": 30}
 
     def __init__(self, render_mode="human"):
         self.render_mode = render_mode
-        self.vis = meshcat.Visualizer()
-        self.vis.open()
-        self.trail_markers = []  # For trajectory markers
+        self.trail_markers = []
         self.trail_positions = []
-        self.step_counter = 0    # To track how many steps have passed
+        self.step_counter = 0
 
+        if self.render_mode == "human":
+            self.vis = meshcat.Visualizer()
+            self.vis.open()
+            self.set_camera()
+        else:
+            self.vis = None  # Don't even instantiate the visualizer
+
+    
+    def set_camera(self):
+        """Set up the camera with a specific position and orientation."""
+        # Example camera position (x, y, z) and orientation (rotation matrix or Euler angles)
+        camera_position = np.array([2, 2, 2])  # Position of the camera
+        look_at_position = np.array([0, 0, 0])  # Point the camera is looking at
+        up_direction = np.array([0, 0, 1])  # The "up" direction of the camera
+
+        # Create the transformation matrix to position the camera
+        self.vis["camera"].set_transform(
+            meshcat.transformations.look_at(camera_position, look_at_position, up_direction)
+        )
 
     def render(self, model_path):
         if self.render_mode != "human":
