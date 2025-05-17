@@ -17,10 +17,10 @@ def main():
     from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
     from stable_baselines3.common.callbacks import BaseCallback # for callbacks
-    
+    import math
 
     import pickle # saving the stats
-    from EpisodeStatsCallback import EpisodeStatsCallback
+    from examples.EpisodeStatsCallback import EpisodeStatsCallback
     from stable_baselines3.common.vec_env import SubprocVecEnv
 
 
@@ -79,19 +79,16 @@ def main():
     NUM_ENVS = 12
 
     def episode_length_schedule(local_step):
-        approx_global_step = local_step * NUM_ENVS  # Approximate global progress
-        if approx_global_step < 800_000:
-            return 150
-        elif approx_global_step < 1_400_000:
-            return 300
-        elif approx_global_step < 2_000_000:
-            return 400
-        elif approx_global_step < 1_400_000:
-            return 300
-        elif approx_global_step < 2_000_000:
-            return 400
-        else:
-            return 500
+        approx_global_step = local_step * NUM_ENVS
+        start_length = 150
+        final_length = 500
+        max_steps = 12_000_000
+
+        # Sigmoid-like curve
+        progress = approx_global_step / max_steps
+        scaled = 1 / (1 + math.exp(-10 * (progress - 0.5)))  # Range ~ [0,1]
+
+        return int(start_length + scaled * (final_length - start_length))
 
     def goal_distance_schedule(local_step):
         approx_global_step = local_step * NUM_ENVS
@@ -130,17 +127,17 @@ def main():
     env = VecNormalize(env, training=True, norm_obs=True, norm_reward=True, clip_reward=10.0)
 
     # Load normalization statistics if available
-    env = VecNormalize.load("examples/12_mio/bluerov_vec_normalize_scratch2.pkl", env)
+    #env = VecNormalize.load("examples/12_mio/bluerov_vec_normalize_scratch2.pkl", env)
     # Initialize PPO from scratch with MLP policy
-    #model = PPO("MultiInputPolicy", env,gamma=0.99,learning_rate=2.5e-4, verbose=1,tensorboard_log="./tensorboard_logs/")
+    model = PPO("MultiInputPolicy", env,gamma=0.99,learning_rate=2.5e-4, verbose=1,tensorboard_log="./tensorboard_logs/")
 
     # Load the pretrained model
-    model = PPO.load("examples/12_mio/bluerov_ppo_scratch2.zip", env=env,tensorboard_log="./tensorboard_logs/")#, device="mps")
+    #model = PPO.load("examples/12_mio/bluerov_ppo_scratch2.zip", env=env,tensorboard_log="./tensorboard_logs/")#, device="mps")
 
     #training + callback initialisation
 
     callback = EpisodeStatsCallback()
-    model.learn(total_timesteps=4000000, callback=callback, progress_bar=True) #12mio
+    model.learn(total_timesteps=14000000, callback=callback, progress_bar=True) #12mio
 
     # After training
     stats = callback.get_stats()
@@ -148,10 +145,10 @@ def main():
         pickle.dump(stats, f)
 
     # Save the updated model
-    model.save("examples/bluerov_ppo_scratch2")
+    model.save("examples/bluerov_ppo_scratch14mio")
 
     # Save the updated environment normalization stats
-    env.save("examples/bluerov_vec_normalize_scratch2.pkl")
+    env.save("examples/bluerov_vec_normalize_scratch14mio.pkl")
 
 
 if __name__ == "__main__":
