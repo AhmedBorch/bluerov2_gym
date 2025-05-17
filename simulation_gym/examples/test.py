@@ -7,6 +7,8 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
 import bluerov2_gym  # This import will automatically register the environment
+import bluerov2_gym.envs #this is needed to register the environment
+
 import webbrowser
 import threading
 import requests
